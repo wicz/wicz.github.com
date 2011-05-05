@@ -6,7 +6,7 @@ top: Vinicius Horewicz
 Blog Posts ![Feed icon](/images/feed-icon-14x14.png)
 ==========
 
-{% for post in posts %}
+{% for post in site.posts %}
 <div class="section list">
   <div class="date">{{ post.date | date_to_string }}</div>
   <p class="line">

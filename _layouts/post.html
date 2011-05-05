@@ -1,0 +1,38 @@
+---
+layout: default
+top: Vinicius Horewicz
+feed: atom.xml
+---
+
+  <h1 class="emphnext">{{ page.title }}</h1>
+
+  {{ content }}
+
+  <address class="signature">
+    <span class="date">{{ page.date | date_to_long_string }}</span>
+  </address>
+
+
+<!-- Delicious hits
+<script type="text/javascript">
+    if (typeof window.Delicious == "undefined") window.Delicious = {};
+    Delicious.BLOGBADGE_DEFAULT_CLASS = 'delicious-blogbadge-line';
+</script>
+<script src="http://static.delicious.com/js/blogbadge.js"></script>
+-->
+
+<!-- Discus Comments -->
+<div id="disqus_thread"></div>
+
+<!-- Enable Disqus comments -->
+<script type="text/javascript">
+	var disqus_iframe_css = "http://horewi.cz/css/screen.css";
+	var disqus_title = "{{ page.title }}";
+	var disqus_message = "{{ page.excerpt }}";
+</script>
+<script type="text/javascript" src="http://disqus.com/forums/wicz/embed.js"></script>
+
+<noscript>
+		<a href="http://wicz.disqus.com/?url=ref">View the discussion thread.</a>
+</noscript>
+

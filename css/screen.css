@@ -306,7 +306,6 @@ p.excerpt { margin: 0; }
 
 /* @group Signature */
 .signature { 
-	margin-top: 3em; 
 	position: relative;
 }
 .signature .author { 
