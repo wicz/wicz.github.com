@@ -51,7 +51,7 @@ h1 { margin-bottom: 1em; }
 h2 {
 	font-size: 100%;
 	line-height: 1.5em;
-	margin:1.5em 0 1.5em 0;
+	margin:.8em 0;
 	font-weight:bold;
 }
 
@@ -274,8 +274,6 @@ body#Kith #header a.kith
 .section { 
 	font-size: 87.5%; 
 	line-height: 1.43em; 
-	margin-bottom: 1.43em;
-	margin-top: 1.43em;
 	margin-left: 7.5em;
 	padding-right: 3em;
 	position: relative;
