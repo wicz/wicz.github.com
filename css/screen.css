@@ -216,7 +216,7 @@ ul.compact li a {
 
 #header ul {
 	position: absolute;
-	top: 0;
+	top: .5em;
 	right: 0;
 	font-size: 100%;
 	line-height: 1.6em;
@@ -227,12 +227,8 @@ ul.compact li a {
 }
 #header ul li { display: inline; }
 #header ul li a {
-	padding: 0.4em 0.3em 0 0.3em;
+	padding: 0.4em 0.3em 0 0em;
 	display: inline;
-}
-#header ul li a:hover {
-	color: blue;
-	border-bottom: 2px solid blue;
 }
 #header .byline {
 	color: silver;
@@ -282,6 +278,7 @@ body#Kith #header a.kith
 	margin-top: 1.43em;
 	margin-left: 7.5em;
 	padding-right: 3em;
+	position: relative;
 }
 .section div.date {
 	font-family: Palatino, georgia, serif;
