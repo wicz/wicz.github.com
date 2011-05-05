@@ -84,7 +84,7 @@ sup { line-height: 1ex; }
 	-moz-box-shadow: 2px 2px 8px #aaa;	
 }
 
-#disqus_thread { padding-top: 0; }
+#disqus_thread { padding-top: .5em; }
 
 /* TODO
 #page { counter-reset: section; }
@@ -196,8 +196,8 @@ ul.compact li a {
 /* @group Header */
 #header, #header a { color: silver; }
 #header .hover { color: transparent; }
-#header:hover a { color: black; text-shadow: #aaa 2px 2px 3px;}
-#header:hover a:hover { text-decoration: none; }
+#header a:hover { color: black; text-shadow: #aaa 2px 2px 3px;}
+#header a:hover { text-decoration: none; }
 #header a:hover .hover { color: silver; }
 #header {
 	position: relative;
