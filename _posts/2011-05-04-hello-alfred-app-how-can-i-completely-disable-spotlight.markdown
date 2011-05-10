@@ -3,6 +3,8 @@ layout: post
 title: Hello Alfred App, how can I completely disable Spotlight?
 ---
 
+__UPDATE 2011-05-10:__ STOP RIGHT NOW! After a few days I wrote this, I realized that Alfred __uses__ the metadata services, which means if you disable it, Alfred will stop working. Why I couldn't find anything about that in their docs? I'm still using it, though I'm not sure if I'll keep it.
+
 So, finally I'm giving [Alfred App](http://www.alfredapp.com) a try. It reminds me a lot the (discontinued?) [Enso](http://www.humanized.com/enso/) from Humanized.
 
 Since I'll be using Alfred in favor of Spotlight, I want to disable the latter. Googling a bit gives us a lot of ways to do it, but all looks a bit intrusive and destructive to me. I don't want to delete Spotlight, I just want to disable it!
