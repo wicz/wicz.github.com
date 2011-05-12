@@ -1,6 +1,7 @@
 ---
 layout: post
 title: First mutuo sketches
+date: Thu May 12 20:25:08 CEST 2011
 ---
 
 Here is the digital version of the very first sketch I've made of mutuo architecture.
