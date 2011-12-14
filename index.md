@@ -3,9 +3,11 @@ layout: default
 top: Vinicius Horewicz
 ---
 
-{% for post in site.posts %}
-<div class="section list">
-  <div class="date">{{ post.date | date_to_string }}</div>
-  <h2><a class="title" href="{{ post.url }}">{{ post.title }}</a></h2>
+<div id="blog-archives" class="category">
+  {% for post in site.posts %}
+    <article>
+      <h2><a href="{{ root_url }}{{ post.url }}">{{post.title}}</a></h2>
+      <time datetime="{{ post.date | datetime | date_to_xmlschema }}" pubdate>{{ post.date | date_to_string }}</time>
+    </article>
+  {% endfor %}
 </div>
-{% endfor %}

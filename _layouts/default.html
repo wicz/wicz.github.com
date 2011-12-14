@@ -1,12 +1,18 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
-    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
-
-<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en-us">
+<!doctype html>
+<!--[if lt IE 7]> <html class="no-js ie6 oldie" lang="en"> <![endif]-->
+<!--[if IE 7]>    <html class="no-js ie7 oldie" lang="en"> <![endif]-->
+<!--[if IE 8]>    <html class="no-js ie8 oldie" lang="en"> <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en"> <!--<![endif]-->
 <head>
-   <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-   <title>{{ page.title }} &larr; {{ page.top }}</title>
-   <meta name="author" content="Vinicius Horewicz" />
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
 
+  <title>{{ page.title }} &larr; {{ page.top }}</title>
+  <meta name="author" content="Vinicius Horewicz (wicz)">
+  <meta name="description" content="wicz' personal notes">
+
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  
   <link rel="openid.server" href="http://www.myopenid.com/server" />
   <link rel="openid.delegate" href="http://wicz.myopenid.com/" />
   <link rel="openid2.local_id" href="http://wicz.myopenid.com" />
@@ -16,55 +22,52 @@
    <link rel="start" href="/" />
    <link rel="alternate" type="application/atom+xml" href="/atom.xml" title="RSS feed" />
 
-   <!-- syntax highlighting CSS -->
-   <link rel="stylesheet" href="/css/syntax.css" type="text/css" />
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="/css/screen.css">
+  <link rel="stylesheet" href="/css/syntax.css">
 
-   <!-- Homepage CSS -->
-   <link rel="stylesheet" href="/css/screen.css" type="text/css" />
-
-<script type="text/javascript">
-  var _gaq = _gaq || [];
-  _gaq.push(['_setAccount', 'UA-8480243-3']);
-  _gaq.push(['_trackPageview']);
-
-  (function() {
-    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
-    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
-    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
-  })();
-</script>
-
+  <script src="/js/libs/modernizr-2.0.6.min.js"></script>
+  <link href="http://fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+  <link href="http://fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
 </head>
+
 <body>
-<div id="site">
 
-  <div id="header">
-    <h1><a href="/">Vinicius Horewicz</a></h1>
-<ul class="nav">
-  <li><a href="http://br.linkedin.com/in/viniciushorewicz"><img src="/images/linkedin.png"></a></li>
-  <li><a href="https://github.com/wicz"><img src="/images/github.png"></a></li>
-  <li><a href="https://twitter.com/wicz"><img src="/images/twitter.png"></a></li>
-  <li><a href="/atom.xml"><img src="/images/rss.png"></a></li>
-</ul>
-  </div>
+  <div id="container">
+    <header>
+      <h1><a href="/">Vinicius Horewicz</a></h1>
+      <ul class="nav">
+        <li><a href="http://br.linkedin.com/in/viniciushorewicz"><img src="/images/linkedin.png"></a></li>
+        <li><a href="https://github.com/wicz"><img src="/images/github.png"></a></li>
+        <li><a href="https://twitter.com/wicz"><img src="/images/twitter.png"></a></li>
+        <li><a href="/atom.xml"><img src="/images/rss.png"></a></li>
+      </ul>
+    </header>
+    
+    <div id="main" role="main">
+      {{ content }}
+    </div>
+    
+    <footer>
+    </footer>
+  </div> <!--! end of #container -->
 
-  <div id="page">
-    {{ content }}
-  </div>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.6.2/jquery.min.js"></script>
+  <script>window.jQuery || document.write('<script src="/js/libs/jquery-1.6.2.min.js"><\/script>')</script>
 
-  <div id="footer">
-  <address>
-    <span class="copyright">
-      Design by <a href="http://mark.reid.name">Mark Reid</a>,
-      Icons by <a href="http://icondock.com">IconDock</a>
-    </span>
-    <span class="engine">
-      Powered by
-      <a href="http://github.com/mojombo/jekyll" title="A static, minimalist CMS">Jekyll</a>
-    </span>
-  </address>
-  </div>
-</div>
+  <script defer src="/js/plugins.js"></script>
 
+  <script> // Change UA-XXXXX-X to be your site's ID
+    window._gaq = [['_setAccount','UA-8480243-3'],['_trackPageview'],['_trackPageLoadTime']];
+    Modernizr.load({
+      load: ('https:' == location.protocol ? '//ssl' : '//www') + '.google-analytics.com/ga.js'
+    });
+  </script>
+
+  <!--[if lt IE 7 ]>
+    <script src="//ajax.googleapis.com/ajax/libs/chrome-frame/1.0.3/CFInstall.min.js"></script>
+    <script>window.attachEvent('onload',function(){CFInstall.check({mode:'overlay'})})</script>
+  <![endif]-->
+  
 </body>
 </html>

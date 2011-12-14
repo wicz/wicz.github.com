@@ -9,7 +9,7 @@ Only one thing I can complain: Why in hell I can't set a fixed width font for pl
 
 If you're like me, dark days are over! All you need is tweak some CSS and voila! Inside `/Applications/Sparrow.app/Contents/Resources/`
 
-{% highlight css %}
+{% highlight css linenos %}
 // message-editing.css
 body { font-family: Monospace; }
 
