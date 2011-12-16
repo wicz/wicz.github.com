@@ -8,7 +8,7 @@ body
 #container
 {
 	margin:1.5em auto 3em;
-	max-width:46em;
+	max-width:50em;
 }
 
 header
@@ -154,21 +154,38 @@ header .nav li
 	color:#0181eb;
 }
 
-code
+p > code, .linenodiv, .highlight
 {
-	-khtml-border-radius:.4em;
-	-moz-border-radius:.4em;
-	-ms-border-radius:.4em;
-	-o-border-radius:.4em;
-	-webkit-border-radius:.4em;
 	background:#fff;
+	color:#555;
+  font-size:.8em;
+  line-height:1.5em; 
+  padding:0 .5em;
+	white-space:no-wrap;
 	border:1px solid #ddd;
 	border-radius:.4em;
-	color:#555;
-	display:inline-block;
-	font-size:.8em;
-	line-height:1.5em;
-	margin:-1px 0;
-	padding:0 .3em;
-	white-space:no-wrap;
+}
+.linenodiv, .highlight
+{
+  padding:.5em 1em;
+}
+.highlighttable
+{
+  width:100%;
+  margin-bottom:1em;
+}
+.highlighttable pre, .highlight pre
+{
+  margin:0;
+  padding:0;
+}
+#main img
+{
+  display:block;
+  width:auto;
+  margin:0 auto;
+}
+li
+{
+  margin-bottom:1em;
 }
