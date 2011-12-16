@@ -3,7 +3,7 @@ layout: post
 title: Testing subdomains and redirects with Cucumber
 ---
 
-UPDATE: If you're on Mac OS X, forget all the /etc/hosts and PAC thing and go for Pow.
+__UPDATE 2011-04-13:__ If you're on Mac OS X, forget all the /etc/hosts and PAC thing and go for [Pow](http://pow.cx/).
 
 The other day I was writing some Cucumber features for a Rails app that relies on subdomains for creating per-user contexts. It seems that Webrat can't handle subdomains and redirects the way I expected.
 
@@ -14,7 +14,7 @@ I hate when I have to access 127.0.0.1 or localhost:3000. Typing all these numbe
 
 Here's how it looks like. You can grab more details here.
 
-{% highlight javascript %}
+{% highlight javascript linenos=table linenospecial=1 %}
 function FindProxyForURL(url, host) {
   if (shExpMatch(host, "*.local")) {
     return "PROXY 127.0.0.1:3000";
@@ -28,7 +28,7 @@ Now I am able to access johndoe.app.local, foobar.app.local, etc. No numbers, no
 
 My ApplicationController implements a simple before_filter that checks for a valid account, otherwise redirects to a fallback page. Something like this:
 
-{% highlight ruby %}
+{% highlight ruby linenos=table linenospecial=1 %}
 before_filter :account_required
 
 def current_account
@@ -67,7 +67,7 @@ The Caveats
 
 By default, Webrat uses www.example.com as host for testing. Since it was trying to sign in to a account that doesn't exist (the Given creates foobar), it was being redirect to the fallback url, so it couldn't find the form fields. Knowing that Webrat's RailsAdapter uses ActionController::Integration::Session, we can easily solve this by overwriting the host name to use in the next request. Our Given should look like this:
 
-{% highlight ruby %}
+{% highlight ruby linenos=table linenospecial=1 %}
 Given /^the foobar account$/ do
   Foobar.create(...)
   host! "foobar.app.local"
@@ -81,7 +81,7 @@ Webrat's behavior is to follow any redirects, except for external ones. And subd
  
 Set a domain in my environment.rb:
  
-{% highlight ruby %}
+{% highlight ruby linenos=table linenospecial=1 %}
 APP_DOMAIN = "app." + case RAILS_ENV
 when "production" then "com"
 when "cucumber" then "example.com"
