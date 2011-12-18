@@ -7,7 +7,7 @@ top: Vinicius Horewicz
 
   {{ content }}
   
-  <span class="date">{{ page.date | date_to_long_string }}</span>
+  <time datetime="{{ page.date | datetime | date_to_xmlschema }}" pubdate>{{ page.date | date_to_long_string }}</time>
 
 <!-- Enable Disqus comments -->
 <div id="disqus_thread"></div>

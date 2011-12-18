@@ -114,7 +114,7 @@ header .nav li
 	text-decoration:underline;
 }
 
-#blog-archives a.category,#blog-archives time
+#blog-archives a.category, #blog-archives time
 {
 	color:#aaa;
 }
@@ -188,4 +188,17 @@ p > code, .linenodiv, .highlight
 li
 {
   margin-bottom:1em;
+}
+blockquote
+{
+  color: #888;
+  font-style: italic;
+}
+#main time
+{
+  color:#888;
+  font-style: italic;
+  font-size:.8em;
+	line-height:1.2em;
+  margin-bottom:2em;
 }
