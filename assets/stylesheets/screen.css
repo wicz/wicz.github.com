@@ -61,4 +61,10 @@ a {
 a:hover {
   color: #06f;
 }
-
+dt {
+  font-weight: bold;
+}
+p > code {
+  background: #eee;
+  padding:2px 4px;
+}
