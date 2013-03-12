@@ -1,24 +1,31 @@
 ---
-layout: default
+layout: index
 top: Vinicius Horewicz
 ---
 
-  <h1>{{ page.title }}</h1>
+<p><a href="/">&larr; index</a></p>
 
-  {{ content }}
-  
-  <time datetime="{{ page.date | datetime | date_to_xmlschema }}" pubdate>{{ page.date | date_to_long_string }}</time>
+<section class="post-content">
+  <header>
+    <h1>{{ page.title }}</h1>
+    <time datetime="{{ page.date | datetime | date_to_xmlschema }}" pubdate>{{ page.date | date_to_long_string }}</time>
+  </header>
+
+  <article>
+    {{ content }}
+  </article>
+</section>
 
 <!-- Enable Disqus comments -->
 <div id="disqus_thread"></div>
 <script type="text/javascript">
-    var disqus_shortname = 'horewicz';
-    var disqus_identifier = '{{ page.id }}';
-    var disqus_url = 'http://horewi.cz{{ page.url }}';
-    (function() {
-        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
-        dsq.src = 'http://' + disqus_shortname + '.disqus.com/embed.js';
-        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
-    })();
+  var disqus_shortname = 'horewicz';
+  var disqus_identifier = '{{ page.id }}';
+  var disqus_url = 'http://horewi.cz{{ page.url }}';
+  (function() {
+    var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+    dsq.src = 'http://' + disqus_shortname + '.disqus.com/embed.js';
+    (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+  })();
 </script>
-<noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+

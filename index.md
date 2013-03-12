@@ -1,13 +1,18 @@
 ---
-layout: default
+layout: index
 top: Vinicius Horewicz
 ---
 
-<div id="blog-archives" class="category">
+<header>
+  <h1>Vinicius Horewicz</h1>
+</header>
+
+<section class="blog-posts">
   {% for post in site.posts %}
     <article>
-      <h2><a href="{{ root_url }}{{ post.url }}">{{post.title}}</a></h2>
       <time datetime="{{ post.date | datetime | date_to_xmlschema }}" pubdate>{{ post.date | date_to_string }}</time>
+      <h3><a href="{{ root_url }}{{ post.url }}">{{post.title}}</a></h3>
     </article>
   {% endfor %}
-</div>
+</section>
+

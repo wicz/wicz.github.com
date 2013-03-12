@@ -1,6 +1,7 @@
 ---
 layout: post
 title: "TDD em: O que testar?"
+published: false
 ---
 
 <p>Quando comecei a implantar desenvolvimento guiado por testes (<a title="Tudo sobre TDD" href="http://dojofloripa.wordpress.com/2007/09/10/tudo-sobre-tdd/">TDD</a>) na empresa em que trabalhava, tive a sorte de fazer parte de uma equipe de desenvolvedores bastante competente. Com apenas uma apresenta&ccedil;&atilde;o de poucos minutos e duas semanas de pr&aacute;tica, quase todos j&aacute; conseguiram captar que a ess&ecirc;ncia do TDD n&atilde;o &eacute; apenas valida&ccedil;&atilde;o de c&oacute;digo, mas tamb&eacute;m a especifica&ccedil;&atilde;o de determinada funcionalidade.</p>
@@ -9,23 +10,23 @@ title: "TDD em: O que testar?"
 <ul>
 <li><strong>Right</strong> &ndash; Are the results <strong>right</strong>?</li>
 </ul>
-<dl> <dd>Dados valores de entrada e seus respectivos valores de sa&iacute;da, verifica-se se a implementa&ccedil;&atilde;o esta de acordo, ou seja, se os resultados est&atilde;o certos.</dd> </dl> 
+<dl> <dd>Dados valores de entrada e seus respectivos valores de sa&iacute;da, verifica-se se a implementa&ccedil;&atilde;o esta de acordo, ou seja, se os resultados est&atilde;o certos.</dd> </dl>
 <ul>
 <li><strong>B</strong> &ndash;  Are all  the <strong>boundary</strong> conditions <strong>CORRECT</strong>?</li>
 </ul>
-<dl> <dd>Verificar se os valores est&atilde;o dentro do dom&iacute;nio, dos limites aceit&aacute;veis. Por exemplo, uma valida&ccedil;&atilde;o de preenchimento de um campo, ou ainda se este foi preenchido na formata&ccedil;&atilde;o adequada. Veja abaixo a descri&ccedil;&atilde;o do acr&ocirc;nimo CORRECT, que descreve algumas condi&ccedil;&otilde;es de limites. </dd> </dl> 
+<dl> <dd>Verificar se os valores est&atilde;o dentro do dom&iacute;nio, dos limites aceit&aacute;veis. Por exemplo, uma valida&ccedil;&atilde;o de preenchimento de um campo, ou ainda se este foi preenchido na formata&ccedil;&atilde;o adequada. Veja abaixo a descri&ccedil;&atilde;o do acr&ocirc;nimo CORRECT, que descreve algumas condi&ccedil;&otilde;es de limites. </dd> </dl>
 <ul>
 <li><strong>I</strong> &ndash;  Can  you check <strong>inverse</strong> relationships?</li>
 </ul>
-<dl> <dd>Alguns m&eacute;todos podem ser verificados aplicando a sua l&oacute;gica inversa. Por exemplo, para verificar o resultado de uma divis&atilde;o, podemos comparar o dividendo com a multiplica&ccedil;&atilde;o do divisor com o quociente, adicionado ao resto. </dd> </dl> 
+<dl> <dd>Alguns m&eacute;todos podem ser verificados aplicando a sua l&oacute;gica inversa. Por exemplo, para verificar o resultado de uma divis&atilde;o, podemos comparar o dividendo com a multiplica&ccedil;&atilde;o do divisor com o quociente, adicionado ao resto. </dd> </dl>
 <ul>
 <li><strong>C</strong> &ndash; Can you <strong>cross-check</strong> results usings other means?</li>
 </ul>
-<dl> <dd>Semelhante a rela&ccedil;&atilde;o inversa, podemos verificar os resultados por outros meios. Podemos certificar o sucesso de uma inser&ccedil;&atilde;o de uma elemento em um vetor, verificando se o tamanho deste antes da inser&ccedil;&atilde;o e acrescido de um, &eacute; igual o tamanho depois da inser&ccedil;&atilde;o <em>(1 + Ni = Ni+1)</em>. </dd> </dl> 
+<dl> <dd>Semelhante a rela&ccedil;&atilde;o inversa, podemos verificar os resultados por outros meios. Podemos certificar o sucesso de uma inser&ccedil;&atilde;o de uma elemento em um vetor, verificando se o tamanho deste antes da inser&ccedil;&atilde;o e acrescido de um, &eacute; igual o tamanho depois da inser&ccedil;&atilde;o <em>(1 + Ni = Ni+1)</em>. </dd> </dl>
 <ul>
 <li><strong>E</strong> &ndash; Can you force <strong>error</strong> conditions to happen?</li>
 </ul>
-<dl> <dd>Verificar como a aplica&ccedil;&atilde;o se comporta em situa&ccedil;&otilde;es adversas. Podemos for&ccedil;ar um erro simples, com uma passagem de par&acirc;metros incorreta, por exemplo. Mas n&atilde;o podemos esquecer dos outros diversos poss&iacute;veis problemas do dia-a-dia. Uma falha na comunica&ccedil;&atilde;o, espa&ccedil;o em disco que se acaba, mem&oacute;ria insuficiente, etc. Uma maneira de testar isso &eacute; a utiliza&ccedil;&atilde;o de objetos Mock?. Mas isso j&aacute; &eacute; pano para outra manga =) </dd> </dl> 
+<dl> <dd>Verificar como a aplica&ccedil;&atilde;o se comporta em situa&ccedil;&otilde;es adversas. Podemos for&ccedil;ar um erro simples, com uma passagem de par&acirc;metros incorreta, por exemplo. Mas n&atilde;o podemos esquecer dos outros diversos poss&iacute;veis problemas do dia-a-dia. Uma falha na comunica&ccedil;&atilde;o, espa&ccedil;o em disco que se acaba, mem&oacute;ria insuficiente, etc. Uma maneira de testar isso &eacute; a utiliza&ccedil;&atilde;o de objetos Mock?. Mas isso j&aacute; &eacute; pano para outra manga =) </dd> </dl>
 <ul>
 <li><strong>P</strong> &ndash; Are <strong>performance</strong> characteristics within bounds?</li>
 </ul>
@@ -34,27 +35,27 @@ title: "TDD em: O que testar?"
 <ul>
 <li><strong>C</strong>onformance &ndash; Does the value conform to an expected format?</li>
 </ul>
-<dl> <dd>Verifica se o valor em quest&atilde;o esta de acordo com o formato estabelecido. Por exemplo, um CPF ou CNPJ, ou ainda uma estrutura mais complexa como uma &aacute;rvore bin&aacute;ria. </dd> </dl> 
+<dl> <dd>Verifica se o valor em quest&atilde;o esta de acordo com o formato estabelecido. Por exemplo, um CPF ou CNPJ, ou ainda uma estrutura mais complexa como uma &aacute;rvore bin&aacute;ria. </dd> </dl>
 <ul>
 <li><strong>O</strong>rdering &ndash; Is the set of values ordered or unordered as appropriate?</li>
 </ul>
-<dl> <dd>Diz respeito a ordena&ccedil;&atilde;o dos valores. Suponha os processos de uma cafeteira (bom exemplo!): colocarFiltro(), colocarPo(), colocarAgua(), servirCafe(). Esses processos necessariamente precisam estar nessa ordem, caso contr&aacute;rio ningu&eacute;m vai conseguir beber o valor de sa&iacute;da. </dd> </dl> 
+<dl> <dd>Diz respeito a ordena&ccedil;&atilde;o dos valores. Suponha os processos de uma cafeteira (bom exemplo!): colocarFiltro(), colocarPo(), colocarAgua(), servirCafe(). Esses processos necessariamente precisam estar nessa ordem, caso contr&aacute;rio ningu&eacute;m vai conseguir beber o valor de sa&iacute;da. </dd> </dl>
 <ul>
 <li><strong>R</strong>ange &ndash; Is the value within reasonable minimum and maximum values?</li>
 </ul>
-<dl> <dd>Dado valor deve estar dentro do dom&iacute;nio. Por exemplo, o preenchimento do ano de nascimento em um formul&aacute;rio [1900,2007]. </dd> </dl> 
+<dl> <dd>Dado valor deve estar dentro do dom&iacute;nio. Por exemplo, o preenchimento do ano de nascimento em um formul&aacute;rio [1900,2007]. </dd> </dl>
 <ul>
 <li><strong>R</strong>eference &ndash; Does the code reference anything external that isn&rsquo;t under direct control of the code itself?</li>
 </ul>
-<dl> <dd>Verificar se um cen&aacute;rio referencia ou depende de outro fora do seu escopo. Suponha um portal de compras. Antes de adicionar qualquer produto ao carrinho, o usu&aacute;rio deve ter iniciado uma sess&atilde;o (efetuado login). Existem pr&eacute; e p&oacute;s-condi&ccedil;&otilde;es que devem ser satisfeitas para passar o teste. </dd> </dl> 
+<dl> <dd>Verificar se um cen&aacute;rio referencia ou depende de outro fora do seu escopo. Suponha um portal de compras. Antes de adicionar qualquer produto ao carrinho, o usu&aacute;rio deve ter iniciado uma sess&atilde;o (efetuado login). Existem pr&eacute; e p&oacute;s-condi&ccedil;&otilde;es que devem ser satisfeitas para passar o teste. </dd> </dl>
 <ul>
 <li><strong>E</strong>xistence &ndash; Does the value exist (e.g., is non-null, nonzero, present in a set, etc.)?</li>
 </ul>
-<dl> <dd>O teste mais intuitivo, acho. Verificar e um determinado valor de fato existe. Se certo par&acirc;metro foi preenchido. </dd> </dl> 
+<dl> <dd>O teste mais intuitivo, acho. Verificar e um determinado valor de fato existe. Se certo par&acirc;metro foi preenchido. </dd> </dl>
 <ul>
 <li><strong>C</strong>ardinality &ndash; Are there exactly enough values?</li>
 </ul>
-<dl> <dd>Outro simples tamb&eacute;m. Se a cardinalidade, quantidade dos par&acirc;metros passados &eacute; suficiente. </dd> </dl> 
+<dl> <dd>Outro simples tamb&eacute;m. Se a cardinalidade, quantidade dos par&acirc;metros passados &eacute; suficiente. </dd> </dl>
 <ul>
 <li><strong>T</strong>ime (absolute and relative) &ndash; Is everything happening in order? At the right time? In time?</li>
 </ul>

@@ -1,6 +1,7 @@
 ---
 layout: post
 title: User-friendly location-aware web apps
+published: false
 ---
 
 Who have never ever filled a form like this please stand up.

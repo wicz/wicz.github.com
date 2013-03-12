@@ -1,6 +1,7 @@
 ---
 layout: post
 title: Testing subdomains and redirects with Cucumber
+published: false
 ---
 
 __UPDATE 2011-04-13:__ If you're on Mac OS X, forget all the /etc/hosts and PAC thing and go for [Pow](http://pow.cx/).
@@ -53,7 +54,7 @@ The feature was a simple sign in.
 
 {% highlight gherkin %}
 Given the foobar account
-When I go to foobar's sign in page 
+When I go to foobar's sign in page
 And I fill in "user_session[email]" with "foobar@test.com"
 And I fill in "user_session[password]" with "1234"
 And I press "Sign in"
@@ -76,11 +77,11 @@ end
 
 
 Now being able to fill in the form, after submitting it, I still wasn't sent to the expected page. I was willing to see the dashboard, but it was rendering /session, which means I wasn't authenticating at all, even passing valid credentials... WTF!? Then dumping the ActionController::Response object, I verified that it was actually redirecting (@status => "302 Found"), so I decided to investigate Webrat.
- 
+
 Webrat's behavior is to follow any redirects, except for external ones. And subdomains aren't considered as externals. Digging a little deeper, people have reported similar problems and patches (although I've tried none) here, here, here and here. Since the problem seems that Webrat shows some really deep love to example.com, I came up with a ugly-and-fast-but-it-works solution:
- 
+
 Set a domain in my environment.rb:
- 
+
 {% highlight ruby linenos=table linenospecial=1 %}
 APP_DOMAIN = "app." + case RAILS_ENV
 when "production" then "com"
@@ -88,7 +89,7 @@ when "cucumber" then "example.com"
 else "local"
 end
 {% endhighlight %}
- 
+
 And changed the above Given step to  `host! "foobar.#{APP_DOMAIN}"`.
- 
+
 Bar green, code clean, life moves on.

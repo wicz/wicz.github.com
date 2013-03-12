@@ -1,6 +1,7 @@
 ---
 layout: post
 title: "mutuo: peer-to-peer monitoring"
+published: false
 ---
 
 Meet [mutuo](https://github.com/wicz/mutuo), my brand new pet project! mutuo is a resources monitoring system based on a peer-to-peer architecture.

@@ -16,3 +16,4 @@ First, **you shouldn't add comments unless they are extremely necessary.** As go
 **TODO comments are just wrong!** Specially if you're using them to convey something your code should be doing. What your code needs to do is its specification, and we all know the right place to put it.
 
 So, are you still using TODO comments? I'd love to hear your opinions on the comments below.
+

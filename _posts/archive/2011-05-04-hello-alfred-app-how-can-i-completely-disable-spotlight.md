@@ -1,6 +1,7 @@
 ---
 layout: post
 title: Hello Alfred App, how can I completely disable Spotlight?
+published: false
 ---
 
 __UPDATE 2011-05-10:__ STOP RIGHT NOW! After a few days I wrote this, I realized that Alfred __uses__ the metadata services, which means if you disable it, Alfred will stop working. Why I couldn't find anything about that in their docs? I'm still using it, though I'm not sure if I'll keep it.
@@ -23,12 +24,12 @@ OK, but it won't stop Spotlight from initiating after a system restart. Accordin
 $ sudo chmod 000 /System/Library/Frameworks/CoreServices.framework/Frameworks/Metadata.framework/Support/*
 {% endhighlight %}
 
-Great! `ps aux | grep md` shows no metadata processes running. `dmesg` shows no error. But looking at Console.app (/var/log/system.log) I see that launchd is trying to start `mds` every 10 seconds! 
+Great! `ps aux | grep md` shows no metadata processes running. `dmesg` shows no error. But looking at Console.app (/var/log/system.log) I see that launchd is trying to start `mds` every 10 seconds!
 
 {% highlight console %}
 May 3 11:41:11 wicz com.apple.launchd[1] (com.apple.metadata.mds[879]): posix_spawn("/System/Library/Frameworks/CoreServices.framework/Frameworks/Metadata.framework/Support/mds", ...): Permission denied
 May 3 11:41:11 wicz com.apple.launchd[1] (com.apple.metadata.mds[879]): Exited with exit code: 1
-May 3 11:41:11 wicz com.apple.launchd[1] (com.apple.metadata.mds): Throttling respawn: Will start in 10 seconds 
+May 3 11:41:11 wicz com.apple.launchd[1] (com.apple.metadata.mds): Throttling respawn: Will start in 10 seconds
 {% endhighlight %}
 
 Well, I don't wanna lose those CPU cycles. So `chmod` isn't a acceptable solution and neither is deleting those files. Probably the error would be `No such file or directory`.
@@ -69,7 +70,7 @@ And launchctl looks at many different places for .plist files. So if you're gett
 ~/Library/LaunchAgents -- Per-user agents provided by the user.
 /Library/LaunchAgents -- Per-user agents provided by the administrator.
 /Library/LaunchDaemons -- System wide daemons provided by the administrator.
-/System/Library/LaunchAgents -- Mac OS X Per-user 
+/System/Library/LaunchAgents -- Mac OS X Per-user
 /System/Library/LaunchDaemons -- Mac OS X System wide daemons.
 {% endhighlight %}
 
