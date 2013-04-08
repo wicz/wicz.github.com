@@ -22,7 +22,7 @@ header {
 body div.container {
   margin: 0 auto;
   position: relative;
-  max-width: 660px;
+  max-width: 760px;
   width: 80%;
 }
 section.post-content header,
@@ -70,5 +70,13 @@ p > code {
 }
 .footnotes {
   font-size: .8em;
+}
+pre {
+  white-space: pre;
+  word-wrap: normal;
+  overflow-x: scroll;
+}
+pre code {
+  width: 100%;
 }
 
