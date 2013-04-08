@@ -139,7 +139,7 @@ deployed.
 # /opt/elasticbeanstalk/hooks/appdeploy/pre/01a_bootstrap.sh
 #!/usr/bin/env bash
 
-mkdir /var/app/ondeck/vendor /var/app/ondeck/public
+mkdir /var/app/ondeck/vendor /var/app/ondeck/public /var/app/support/bundle /var/app/support/assets
 
 ln -s /var/app/support/bundle /var/app/ondeck/vendor
 ln -s /var/app/support/assets /var/app/ondeck/public
