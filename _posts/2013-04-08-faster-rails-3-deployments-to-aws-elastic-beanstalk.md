@@ -222,3 +222,49 @@ room for improvements. For example, the `update_cache.sh` script could
 check for changes in the cached packages and upload a new version only
 when necessary.
 
+### Update Apr, 09
+
+I had some issues with the asset compilation. The problem is that the
+script
+`/opt/elasticbeanstalk/hooks/appdeploy/pre/11_asset_compilation.sh`
+executes `rake` directly, therefore it was not using the bundled gems.
+I set my bootstrap script to change it to `bundle exec rake`.
+
+~~~
+sed -i 's/"rake/"bundle exec rake/' /opt/elasticbeanstalk/hooks/appdeploy/pre/11_asset_compilation.sh
+~~~
+{: .bash}
+
+Another issue happened with passenger and git backed libraries.
+Thanks to [these](http://stackoverflow.com/a/13657473)
+[answers](http://stackoverflow.com/a/13656775), I was able to fix the
+problem injecting another script right after `10_bundle_install.sh` to
+pack all the gems.
+
+~~~
+files:
+  /opt/elasticbeanstalk/hooks/appdeploy/pre/10a_bundle_pack.sh:
+    mode: "00755"
+    owner: root
+    group: root
+    source: https://s3.amazonaws.com/mybucket/bundle_pack.sh
+~~~
+{: .no-highlight}
+
+~~~
+# /opt/elasticbeanstalk/hooks/appdeploy/pre/10a_bundle_pack.sh
+#!/usr/bin/env bash
+
+. /opt/elasticbeanstalk/support/envvars
+
+cd /var/app/ondeck
+
+bundle pack --all
+~~~
+{: .bash}
+
+I also added the `vendor/cache` directory to the `bundle.tar.gz` to
+avoid any delays in the deployment.
+
+I have put all my configuration files and scripts in this [gist](https://gist.github.com/wicz/5345688).
+
