@@ -46,9 +46,9 @@ section.post-content header time {
   color: #666;
 }
 section.post-content article {
-  font-family: "Droid Sans", Helvetica, Arial, sans-serif;
+  font-family: "Ubuntu", Helvetica, Arial, sans-serif;
   font-size: 1.2em;
-  font-weight: 400;
+  font-weight: 300;
   margin-bottom: 2em;
 }
 a,
@@ -67,6 +67,7 @@ dt {
 p > code {
   background: #eee;
   padding:2px 4px;
+  font-family: "Ubuntu Mono", monospace, serif;
 }
 .footnotes {
   font-size: .8em;
@@ -77,6 +78,8 @@ pre {
   overflow-x: scroll;
 }
 pre code {
-  width: 100%;
+  width: 98%;
+  font-family: "Ubuntu Mono", monospace, serif;
+  font-size: 0.8em;
 }
 
