@@ -76,7 +76,7 @@ cookbook "rbenv", git: "https://github.com/RiotGames/rbenv-cookbook"
 ~~~
 $ cd kitchen
 $ ../bin/librarian-chef install
-$ ../bin/knife cookbook create ruby -o site-coobooks
+$ ../bin/knife cookbook create ruby -o site-cookbooks
 ~~~
 {: .bash}
 
