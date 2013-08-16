@@ -82,4 +82,11 @@ pre code {
   font-family: "Ubuntu Mono", monospace, serif;
   font-size: 0.8em;
 }
+blockquote {
+  color: #999;
+  border-left: 4px solid #ccc;
+  padding-left: 40px;
+  margin-left: 0;
+  font-style: italic;
+}
 
