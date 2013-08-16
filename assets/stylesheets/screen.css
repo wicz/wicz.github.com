@@ -1,6 +1,6 @@
 body {
-  background: #fefefe;
-  color: #444;
+  background: #fff;
+  color: #333;
   font-family: Cambria, Georgia, Times, serif;
   padding: 0;
   position: relative;
@@ -22,7 +22,7 @@ header {
 body div.container {
   margin: 0 auto;
   position: relative;
-  max-width: 760px;
+  max-width: 650px;
   width: 80%;
 }
 section.post-content header,
