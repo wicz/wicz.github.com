@@ -1,5 +1,5 @@
 body {
-  background: #fff;
+  background: #fafafa;
   color: #333;
   font-family: Cambria, Georgia, Times, serif;
   padding: 0;
@@ -23,7 +23,7 @@ body div.container {
   margin: 0 auto;
   position: relative;
   max-width: 650px;
-  width: 80%;
+  width: 50%;
 }
 section.post-content header,
 section.blog-posts article {
@@ -46,9 +46,9 @@ section.post-content header time {
   color: #666;
 }
 section.post-content article {
-  font-family: "Ubuntu", Helvetica, Arial, sans-serif;
+  font-family: "PT Sans Narrow", "Ubuntu", Helvetica, Arial, sans-serif;
   font-size: 1.2em;
-  font-weight: 300;
+  font-weight: 400;
   margin-bottom: 2em;
 }
 a,
@@ -68,6 +68,7 @@ p > code {
   background: #eee;
   padding:2px 4px;
   font-family: "Ubuntu Mono", monospace, serif;
+  font-size: 0.8em;
 }
 .footnotes {
   font-size: .8em;
