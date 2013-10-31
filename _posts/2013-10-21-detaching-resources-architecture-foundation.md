@@ -174,13 +174,13 @@ and disable upstart for some services to be able to use init.d scripts.
 ## The Final Result
 
 The final result is available in this
-[repository](https://github.com/wicz/docker-rabbitmq). I have created
-basic monitrc files for SSH and RabbitMQ, so monit can start these
-services.  If you want to give it a try:
+[repository](https://github.com/wicz/detaching-resources/tree/master/v1).
+I have created basic monitrc files for SSH and RabbitMQ, so monit can
+start these services.  If you want to give it a try:
 
 ~~~
-$ git clone git@github.com:wicz/docker-rabbitmq.git
-$ cd docker-rabbitmq
+$ git clone https://github.com/wicz/detaching-resources.git
+$ cd detaching-resources/v1/docker-rabbitmq
 $ docker build -t <yourusername>/rabbitmq .
 $ docker run -t <yourusername>/rabbitmq
 ~~~
