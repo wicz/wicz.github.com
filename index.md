@@ -5,6 +5,7 @@ top: Vinicius Horewicz
 
 <header>
   <h1>Vinicius Horewicz</h1>
+  {% include links.html %}
 </header>
 
 <section class="blog-posts">

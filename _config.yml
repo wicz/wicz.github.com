@@ -2,4 +2,5 @@ markdown:  kramdown
 permalink: /:title.html
 future:    false
 exclude:   [vendor]
+encoding:  utf-8
 
