@@ -1,14 +1,14 @@
 body {
-  background: #fafafa;
+  background: #fff;
   color: #333;
-  font-family: Cambria, Georgia, Times, serif;
+  font-family: "Roboto Slab", Cambria, Georgia, Times, serif;
   padding: 0;
   position: relative;
   width: 100%;
 }
 footer,
 header {
-  font-family: Cambria, Georgia, Times, serif;
+  font-family: "Roboto Slab", Cambria, Georgia, Times, serif;
   font-size: 1em;
   text-align: center;
 }
@@ -46,7 +46,7 @@ section.post-content header time {
   color: #666;
 }
 section.post-content article {
-  font-family: "Open Sans", Helvetica, Arial, sans-serif;
+  font-family: "Roboto", Helvetica, Arial, sans-serif;
   font-size: 1.2em;
   font-weight: 400;
   margin-bottom: 2em;
