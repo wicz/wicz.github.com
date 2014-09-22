@@ -4,7 +4,7 @@ title: About Vinicius Horewicz
 date: 2013-11-06T12:15:00+01:00
 ---
 
-I'm a 31-year-old software engineer from Brazil, living in Barcelona
+I'm a 32-year-old software engineer from Brazil, living in Barcelona
 with my [lovely wife](http://www.vanessamartins.med.br/).
 
 I was born and raised in Brazil. My father was a colonel and telecom
