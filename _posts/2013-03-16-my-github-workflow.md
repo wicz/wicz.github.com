@@ -11,11 +11,10 @@ I am following it on a daily basis and it is working great so far, thus
 I think it is worth sharing.
 
 #### 1. Update your local master
-~~~
+```sh
 $ git checkout master
 [master]$ git pull
-~~~
-{: .bash}
+```
 
 I keep the `master` a production-ready branch. It is always green on my
 CI and it is the starting point for all feature branches.
@@ -25,10 +24,9 @@ other branches. This helps keeping its history clean and eases reverting
 or rolling back features.
 
 #### 2. Create a feature branch
-~~~
+```sh
 $ git checkout -b brach-name
-~~~
-{: .bash}
+```
 
 Define a convetion to name your branches. Having name initials and
 feature name helps to know what the branch is about and who is
@@ -82,12 +80,11 @@ commits---will do.
 
 Just merge with non-fast forward to keep commits grouped together.
 
-~~~
+```sh
 [branch-name]$ git checkout staging
 [staging]$ git pull
 [staging]$ git merge --no-ff branch-name
-~~~
-{: .bash}
+```
 
 Fix conflicts and any failing tests and you are ready to go.
 
@@ -102,20 +99,18 @@ Try to limit it to only one commit. It will be easier if you need to
 rollback the feature in the future and keeps your `master` history
 clean.
 
-~~~
+```sh
 [branch-name]$ git fetch
 [branch-name]$ git rebase -i origin/master
-~~~
-{: .bash}
+```
 
 
 Open a pull request. I suggest using hub[^4] so you do not
 break your workflow leaving the terminal to use the web interface.
 
-~~~
+```sh
 [branch-name]$ hub pull-request
-~~~
-{: .bash}
+```
 
 Add to the pull request smart commit messages[^5] and links to your
 story in the management tool. For example:
@@ -136,24 +131,21 @@ With your pull request merged, you can safely delete your feature
 branch. GitHub has made it very straightforward[^7]. Although, it is
 important to know how to do it on your own:
 
-~~~
+```sh
 [master]$ git push origin :branch-name
-~~~
-{: .bash}
+```
 
 Delete it locally as well.
 
-~~~
+```sh
 [master]$ git branch -d branch-name
-~~~
-{: .bash}
+```
 
 Clear stale remote-tracking branches removed by someone else (or via GitHub):
 
-~~~
+```sh
 [master]$ git remote prune origin
-~~~
-{: .bash}
+```
 
 That's it! The post ended bigger than expected, and I apologize for
 that. I hope you enjoy and I am looking forward to your opinions in

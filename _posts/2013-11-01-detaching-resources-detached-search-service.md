@@ -4,11 +4,11 @@ title: "Detaching Resources: Detached Search Service"
 ---
 
 In the [previous
-post](horewi.cz/detaching-resources-architecture-foundation.html), we
-have reviewed the basics about virtualization, learned about Docker and
-set up a container running RabbitMQ. In this post, we will create a web
-app with a search service. The interesting part is that the former will
-be completely decoupled from the latter.
+post](detaching-resources-architecture-foundation.html), we have
+reviewed the basics about virtualization, learned about Docker and set
+up a container running RabbitMQ. In this post, we will create a web app
+with a search service. The interesting part is that the former will be
+completely decoupled from the latter.
 
 Regardless of being very contrived, the following example gives us a
 pretty good bird's-eye view and the basics for building web apps towards
@@ -38,7 +38,7 @@ To avoid this intense manual labor, we can use
 network. We will define static IP addresses for the containers and share
 them using environment variables.
 
-~~~
+```sh
 # spin up containers
 $ QUEUE=$(docker run -d wicz/rabbitmq)
 $ WEB=$(docker run -e QUEUE_HOST=10.11.12.1 -d wicz/ruby)
@@ -49,8 +49,7 @@ $ pipework br1 $WEB    10.11.12.2/24
 $ pipework br1 $SEARCH 10.11.12.3/24
 # enable host to access the private network
 $ ifconfig br1 10.11.12.254/24
-~~~
-{: .bash}
+```
 
 Docker 0.7 has a new feature to
 ["link"](http://docs.docker.io/en/latest/examples/linking_into_redis/)
@@ -67,28 +66,25 @@ containers and start the respective services.
 First we need to clone the repository in both _web_ and _search_
 containers:
 
-~~~
+```sh
 $ ssh root@10.11.12.{2,3} git clone https://github.com/wicz/detaching-resources.git /opt/dr
-~~~
-{: .bash}
+```
 
 For the _search_ container we need to start the consumer daemon:
 
-~~~
+```sh
 search$ cd /opt/dr/v2/search
 search$ bundle exec ruby bin/search_consumer.rb
-~~~
-{: .bash}
+```
 
 And for the _web_ container we need to start the consumer and the web
 server:
 
-~~~
+```sh
 web$ cd /opt/dr/v2/web
 web$ bundle exec ruby bin/web_consumer.rb
 web$ bundle exec ruby web.rb -o 0.0.0.0 &
-~~~
-{: .bash}
+```
 
 Now point your browser to the web server and you should see a simple
 page with a search form. Whatever search you do will redirect to another
@@ -99,11 +95,10 @@ Since I am running the docker container inside a Vagrant VM, I
 forwarded a local port to the web server in the _web_ container to be
 able to use my browser in the OS X.
 
-~~~
+```sh
 $ vagrant ssh -- -L 8001:10.11.12.2:4567
 # open http://localhost:8001
-~~~
-{: bash}
+```
 
 ## Behind the scenes
 

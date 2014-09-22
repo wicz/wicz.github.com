@@ -34,13 +34,12 @@ has hooks and scripts associated with it. The program at
 `/usr/bin/directoryHooksExecutor.py` executes those scripts
 sequentially in alphabetical order by name.
 
-~~~
+```
 2013-04-07 14:03:59,414 [INFO] (3056 MainThread) [directoryHooksExecutor.py-29] [root directoryHooksExecutor info] Executing directory: /opt/elasticbeanstalk/hooks/appdeploy/enact/
 2013-04-07 14:03:59,511 [INFO] (3056 MainThread) [directoryHooksExecutor.py-29] [root directoryHooksExecutor info] Executing script: /opt/elasticbeanstalk/hooks/appdeploy/enact/01_flip.sh
 2013-04-07 14:04:00,420 [INFO] (3056 MainThread) [directoryHooksExecutor.py-29] [root directoryHooksExecutor info] Executing script: /opt/elasticbeanstalk/hooks/appdeploy/enact/09clean.sh
 2013-04-07 14:04:00,600 [INFO] (3056 MainThread) [directoryHooksExecutor.py-29] [root directoryHooksExecutor info] Executing script: /opt/elasticbeanstalk/hooks/appdeploy/enact/99_reload_app_server.sh
-~~~
-{: .no-highlight}
+```
 
 Given EC2 (non-EBS) does not persist data, and EB auto-scale our EC2 instances,
 we cannot change these deploys scripts. However, we can [customize the
@@ -57,7 +56,7 @@ I created the two commands below, and added to the top of each
 `/opt/elasticbeanstalk/hooks/appdeploy/**/*.sh` script an instruction to
 create a file with the timestamp of its execution.
 
-~~~
+```yaml
 # .ebextensions/app.config
 commands:
   01_first_command:
@@ -65,10 +64,9 @@ commands:
 container_commands:
   01_first_container_command:
     command: "touch /tmp/$(date +'%T.%N').container_command"
-~~~
-{: .no-highlight}
+```
 
-~~~
+```sh
 # /opt/elasticbeanstalk/hooks/appdeploy/pre/01_unzip.sh
 #!/usr/bin/env bash
 touch /tmp/$(date +"%T.%N").$(basename $0)
@@ -79,8 +77,7 @@ mkdir -p $EB_CONFIG_APP_BASE && chown $EB_CONFIG_APP_USER:$EB_CONFIG_APP_USER $E
 [ -d $EB_CONFIG_APP_ONDECK ] && rm -rf $EB_CONFIG_APP_ONDECK
 su -c "/usr/bin/unzip -d $EB_CONFIG_APP_ONDECK $EB_CONFIG_SOURCE_BUNDLE" $EB_CONFIG_APP_USER
 chmod 775 $EB_CONFIG_APP_ONDECK
-~~~
-{: .bash}
+```
 
 After a deploy, I was able to see the exact sequence of the
 commands executed, and how long each one was taking. The whole process
@@ -88,7 +85,7 @@ was taking about unconceivable __8 minutes__ to complete. The culprits
 for such slowness were, as suspected, gems installation and assets
 compilation.
 
-~~~
+```
 $ ls -1 /tmp
 19:56:22.524828173.command
 19:56:23.188093045.01_unzip.sh
@@ -100,8 +97,7 @@ $ ls -1 /tmp
 20:04:38.656611666.01_flip.sh
 20:04:39.683074030.09clean.sh
 20:04:39.706735596.99_reload_app_server.sh
-~~~
-{: .no-highlight}
+```
 
 ### Caching gems and assets
 
@@ -121,21 +117,20 @@ Since the hook scripts are executed in alphabetical order, we need to
 name the injected script correctly to be executed just after
 `01_unzip.sh`. We will name it `01a_bootstrap.sh`.
 
-~~~
+```yaml
 files:
   /opt/elasticbeanstalk/hooks/appdeploy/pre/01a_bootstrap.sh:
     mode: 00755
     owner: root
     group: root
     source: http://s3.amazonaws.com/mybucket/bootstrap.sh
-~~~
-{: .no-highlight}
+```
 
 The cached files were previously moved to `/var/app/support`. The
 bootstrap script will create symbolic links to the directory being
 deployed.
 
-~~~
+```sh
 # /opt/elasticbeanstalk/hooks/appdeploy/pre/01a_bootstrap.sh
 #!/usr/bin/env bash
 
@@ -143,15 +138,14 @@ mkdir /var/app/ondeck/vendor /var/app/ondeck/public /var/app/support/bundle /var
 
 ln -s /var/app/support/bundle /var/app/ondeck/vendor
 ln -s /var/app/support/assets /var/app/ondeck/public
-~~~
-{: .bash}
+```
 
 Ultimately, we could drop the deployment time near to __1 minute and 4
 seconds__---the time to download the packages is not counted here, but
 since it is in S3 in the same region, it takes no longer than 3 seconds
 to get 30MB. This is the kind of slowness I can withstand.
 
-~~~
+```
 $ ls -1 /tmp
 01:49:05.696544004.01_unzip.sh
 01:49:06.029004848.01a_bootstrap.sh
@@ -162,8 +156,7 @@ $ ls -1 /tmp
 01:50:08.454668833.01_flip.sh
 01:50:09.648283462.09clean.sh
 01:50:09.889387126.99_reload_app_server.sh
-~~~
-{: .no-highlight}
+```
 
 ### Cleaning up and updating the cache
 
@@ -171,17 +164,16 @@ Given the deployment is no more an issue, we need to make sure our
 cached files correspond to the latest version of our application. We
 can use a `post` hook to execute another script to update the cache.
 
-~~~
+```yaml
 files:
   /opt/elasticbeanstalk/hooks/appdeploy/post/01_update_cache.sh:
     mode: 00755
     owner: root
     group: root
     source: http://s3.amazonaws.com/mybucket/update_cache.sh
-~~~
-{: .no-highlight}
+```
 
-~~~
+```sh
 # /opt/elasticbeanstalk/hooks/appdeploy/post/01_update_cache.sh
 #!/usr/bin/env bash
 
@@ -198,8 +190,7 @@ s3put -b mybucket -p /var/app/support -g public-read bundle.tar.gz
 
 tar zcf assets.tar.gz assets
 s3put -b mybucket -p /var/app/support -g public-read assets.tar.gz
-~~~
-{: .bash}
+```
 
 Thanks to staging-production parity, we can safely use our
 staging server to keep the cache updated, and leave the production
@@ -210,12 +201,11 @@ any new EC2 instance EB starts. The only thing left is to configure
 the EC2 to download and unpack those packages. We can easily accomplish
 this using the `sources` key.
 
-~~~
+```yaml
 sources:
   /var/app/support: http://s3.amazonaws.com/mybucket/bundle.tar.gz
   /var/app/support: http://s3.amazonaws.com/mybucket/assets.tar.gz
-~~~
-{: .no-highlight}
+```
 
 We have made great changes to our deploy time. Nevertheless, there is
 room for improvements. For example, the `update_cache.sh` script could
@@ -230,10 +220,9 @@ script
 executes `rake` directly, therefore it was not using the bundled gems.
 I set my bootstrap script to change it to `bundle exec rake`.
 
-~~~
-sed -i 's/"rake/"bundle exec rake/' /opt/elasticbeanstalk/hooks/appdeploy/pre/11_asset_compilation.sh
-~~~
-{: .bash}
+```sh
+$ sed -i 's/"rake/"bundle exec rake/' /opt/elasticbeanstalk/hooks/appdeploy/pre/11_asset_compilation.sh
+```
 
 Another issue happened with passenger and git backed libraries.
 Thanks to [these](http://stackoverflow.com/a/13657473)
@@ -241,17 +230,16 @@ Thanks to [these](http://stackoverflow.com/a/13657473)
 problem injecting another script right after `10_bundle_install.sh` to
 pack all the gems.
 
-~~~
+```yaml
 files:
   /opt/elasticbeanstalk/hooks/appdeploy/pre/10a_bundle_pack.sh:
     mode: "00755"
     owner: root
     group: root
     source: https://s3.amazonaws.com/mybucket/bundle_pack.sh
-~~~
-{: .no-highlight}
+```
 
-~~~
+```sh
 # /opt/elasticbeanstalk/hooks/appdeploy/pre/10a_bundle_pack.sh
 #!/usr/bin/env bash
 
@@ -260,8 +248,7 @@ files:
 cd /var/app/ondeck
 
 bundle pack --all
-~~~
-{: .bash}
+```
 
 I also added the `vendor/cache` directory to the `bundle.tar.gz` to
 avoid any delays in the deployment.

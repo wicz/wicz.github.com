@@ -60,13 +60,12 @@ already makes our lives easier by supporting Vagrant. All you need is to
 install [VirtualBox](https://www.virtualbox.org/) and
 [Vagrant](http://www.vagrantup.com/) and then
 
-~~~
-$ git clone https://github.com/dotcloud/docker.git # clone docker
-$ cd docker   # cd to cloned directory
-$ vagrant up  # tell vagrant to install the vm
-$ vagrant ssh # ssh into your brand new Linux installation
-~~~
-{: .bash}
+```sh
+$ git clone https://github.com/dotcloud/docker.git
+$ cd docker
+$ vagrant up
+$ vagrant ssh
+```
 
 The docker daemon should be already running as root. Since the user
 `vagrant` is in the group `docker`, it is not necessary to run the
@@ -85,7 +84,7 @@ The `Dockerfile` contains the set of
 [steps](http://docs.docker.io/en/latest/use/builder/) docker will
 use to reproduce the system images.
 
-~~~
+```
 # Dockerfile
 FROM ubuntu:latest
 MAINTAINER Vinicius Horewicz <vinicius@horewi.cz>
@@ -116,7 +115,7 @@ ADD ./etc/monit/rabbitmq.conf /etc/monit/conf.d/rabbitmq.conf
 CMD ["/usr/bin/monit", "-I"]
 
 EXPOSE 22 :5672
-~~~
+```
 
 Dockerfiles follow the format `INSTRUCTION arguments`. __The first
 instruction must be__ `FROM`. It specifies the base image from which we
@@ -178,13 +177,12 @@ The final result is available in this
 I have created basic monitrc files for SSH and RabbitMQ, so monit can
 start these services.  If you want to give it a try:
 
-~~~
+```sh
 $ git clone https://github.com/wicz/detaching-resources.git
 $ cd detaching-resources/v1/docker-rabbitmq
 $ docker build -t <yourusername>/rabbitmq .
 $ docker run -t <yourusername>/rabbitmq
-~~~
-{: bash}
+```
 
 Finally, we have set up the architecture foundation. In the next post of
 the series we will start implementing services which will exchange

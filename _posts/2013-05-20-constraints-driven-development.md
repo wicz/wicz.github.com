@@ -67,18 +67,17 @@ now.
 
 I ended turning this:
 
-~~~
+```ruby
 # spec/controllers/posts_controller_spec.rb
 # Tighly coupling between routing and controller actions
 describe "GET show" do
   ...
 end
-~~~
-{: .ruby}
+```
 
 into this:
 
-~~~
+```ruby
 # spec/routing/posts_routing_spec.rb
 # Routing knows about HTTP verbs
 describe "Access a post" do
@@ -90,6 +89,5 @@ end
 describe "#show" do
   ...
 end
-~~~
-{: .ruby}
+```
 
