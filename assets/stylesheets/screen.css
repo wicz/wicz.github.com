@@ -99,4 +99,9 @@ blockquote {
   -webkit-box-shadow:0px 2px 15px rgba(0,0,0,.5);
   box-shadow: 0px 2px 15px rgba(0,0,0,.5);
 }
-
+.fa-tw1tter:before {
+  content: "\f099";
+}
+.fa-l1nkedin:before {
+  content: "\f0e1";
+}
