@@ -22,14 +22,14 @@ header {
 body div.container {
   margin: 0 auto;
   position: relative;
-  max-width: 650px;
-  width: 50%;
+  width: 750px;
 }
 section.post-content header,
 section.blog-posts article {
   border-bottom: 1px solid #ddd;
 }
 section.blog-posts article h3 {
+  font-size: 1.4em;
   font-weight: 300;
 }
 section.blog-posts article time {
@@ -47,8 +47,9 @@ section.post-content header time {
 }
 section.post-content article {
   font-family: "Roboto", Helvetica, Arial, sans-serif;
-  font-size: 1.2em;
+  font-size: 1.4em;
   margin-bottom: 2em;
+  font-weight: 300;
 }
 a,
 a:visited,
@@ -60,8 +61,8 @@ a {
 a:hover {
   color: #06f;
 }
-dt {
-  font-weight: bold;
+strong, dt {
+  font-weight: 400;
 }
 p > code {
   background: #eee;
