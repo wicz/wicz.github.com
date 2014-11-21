@@ -1,4 +1,4 @@
-permalink: /:title
+permalink: /:title.html
 future:    false
 exclude:   [vendor]
 kramdown:
