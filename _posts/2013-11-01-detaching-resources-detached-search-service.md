@@ -38,7 +38,7 @@ To avoid this intense manual labor, we can use
 network. We will define static IP addresses for the containers and share
 them using environment variables.
 
-```sh
+```console
 # spin up containers
 $ QUEUE=$(docker run -d wicz/rabbitmq)
 $ WEB=$(docker run -e QUEUE_HOST=10.11.12.1 -d wicz/ruby)
@@ -66,13 +66,13 @@ containers and start the respective services.
 First we need to clone the repository in both _web_ and _search_
 containers:
 
-```sh
+```console
 $ ssh root@10.11.12.{2,3} git clone https://github.com/wicz/detaching-resources.git /opt/dr
 ```
 
 For the _search_ container we need to start the consumer daemon:
 
-```sh
+```console
 search$ cd /opt/dr/v2/search
 search$ bundle exec ruby bin/search_consumer.rb
 ```
@@ -80,7 +80,7 @@ search$ bundle exec ruby bin/search_consumer.rb
 And for the _web_ container we need to start the consumer and the web
 server:
 
-```sh
+```console
 web$ cd /opt/dr/v2/web
 web$ bundle exec ruby bin/web_consumer.rb
 web$ bundle exec ruby web.rb -o 0.0.0.0 &
@@ -95,7 +95,7 @@ Since I am running the docker container inside a Vagrant VM, I
 forwarded a local port to the web server in the _web_ container to be
 able to use my browser in the OS X.
 
-```sh
+```console
 $ vagrant ssh -- -L 8001:10.11.12.2:4567
 # open http://localhost:8001
 ```

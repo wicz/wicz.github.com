@@ -130,7 +130,7 @@ The cached files were previously moved to `/var/app/support`. The
 bootstrap script will create symbolic links to the directory being
 deployed.
 
-```sh
+```bash
 # /opt/elasticbeanstalk/hooks/appdeploy/pre/01a_bootstrap.sh
 #!/usr/bin/env bash
 
@@ -220,7 +220,7 @@ script
 executes `rake` directly, therefore it was not using the bundled gems.
 I set my bootstrap script to change it to `bundle exec rake`.
 
-```sh
+```console
 $ sed -i 's/"rake/"bundle exec rake/' /opt/elasticbeanstalk/hooks/appdeploy/pre/11_asset_compilation.sh
 ```
 

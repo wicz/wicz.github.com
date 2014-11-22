@@ -11,7 +11,7 @@ I am following it on a daily basis and it is working great so far, thus
 I think it is worth sharing.
 
 #### 1. Update your local master
-```sh
+```console
 $ git checkout master
 [master]$ git pull
 ```
@@ -24,7 +24,7 @@ other branches. This helps keeping its history clean and eases reverting
 or rolling back features.
 
 #### 2. Create a feature branch
-```sh
+```console
 $ git checkout -b brach-name
 ```
 
@@ -80,7 +80,7 @@ commits---will do.
 
 Just merge with non-fast forward to keep commits grouped together.
 
-```sh
+```console
 [branch-name]$ git checkout staging
 [staging]$ git pull
 [staging]$ git merge --no-ff branch-name
@@ -99,7 +99,7 @@ Try to limit it to only one commit. It will be easier if you need to
 rollback the feature in the future and keeps your `master` history
 clean.
 
-```sh
+```console
 [branch-name]$ git fetch
 [branch-name]$ git rebase -i origin/master
 ```
@@ -108,7 +108,7 @@ clean.
 Open a pull request. I suggest using hub[^4] so you do not
 break your workflow leaving the terminal to use the web interface.
 
-```sh
+```console
 [branch-name]$ hub pull-request
 ```
 
@@ -131,19 +131,19 @@ With your pull request merged, you can safely delete your feature
 branch. GitHub has made it very straightforward[^7]. Although, it is
 important to know how to do it on your own:
 
-```sh
+```console
 [master]$ git push origin :branch-name
 ```
 
 Delete it locally as well.
 
-```sh
+```console
 [master]$ git branch -d branch-name
 ```
 
 Clear stale remote-tracking branches removed by someone else (or via GitHub):
 
-```sh
+```console
 [master]$ git remote prune origin
 ```
 

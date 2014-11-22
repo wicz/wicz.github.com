@@ -60,7 +60,7 @@ already makes our lives easier by supporting Vagrant. All you need is to
 install [VirtualBox](https://www.virtualbox.org/) and
 [Vagrant](http://www.vagrantup.com/) and then
 
-```sh
+```console
 $ git clone https://github.com/dotcloud/docker.git
 $ cd docker
 $ vagrant up
@@ -177,7 +177,7 @@ The final result is available in this
 I have created basic monitrc files for SSH and RabbitMQ, so monit can
 start these services.  If you want to give it a try:
 
-```sh
+```console
 $ git clone https://github.com/wicz/detaching-resources.git
 $ cd detaching-resources/v1/docker-rabbitmq
 $ docker build -t <yourusername>/rabbitmq .

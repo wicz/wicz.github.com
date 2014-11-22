@@ -36,7 +36,7 @@ working with chef-solo easier and as powerful as with a Chef server.
 To keep everything organized, create a new project (git repo) and add
 `knife-solo` to the `Gemfile`.
 
-```sh
+```console
 $ git init chef-cookbooks
 $ cd chef-cookbooks
 $ bundle install --path vendor/bundle --binstubs
@@ -49,7 +49,7 @@ Ultimately, initialize your kitchen. Make sure to enable
 [Librarian](https://github.com/applicationsonline/librarian-chef) to
 help you manage your cookbooks dependencies.
 
-```sh
+```console
 $ bin/knife configure --defaults
 $ ssh-keygen -f ~/.chef/$USER.pem
 $ bin/knife solo init kitchen --librarian
@@ -70,7 +70,7 @@ site "http://community.opscode.com/api/v1"
 cookbook "rbenv", git: "https://github.com/RiotGames/rbenv-cookbook"
 ```
 
-```sh
+```console
 $ cd kitchen
 $ ../bin/librarian-chef install
 $ ../bin/knife cookbook create ruby -o site-cookbooks
@@ -128,7 +128,7 @@ file for this server in `nodes/<hostname>.json`.
 Add your recipe to the `run_list` in the JSON file and _cook_ your
 server.
 
-```sh
+```console
 $ ../bin/knife solo prepare pp.app
 # edit nodes/pp.app.json as shown below
 $ ../bin/knife solo cook pp.app
