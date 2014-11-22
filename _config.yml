@@ -1,6 +1,7 @@
 permalink: /:title.html
 future:    false
 exclude:   [vendor]
+markdown: KramdownPygments
 kramdown:
   input: GFM
   hard_wrap: false

@@ -71,7 +71,7 @@ I ended turning this:
 # spec/controllers/posts_controller_spec.rb
 # Tighly coupling between routing and controller actions
 describe "GET show" do
-  ...
+  # ...
 end
 ```
 
@@ -87,7 +87,7 @@ end
 # spec/controllers/posts_controller_spec.rb
 # show is an ordinary method in the controller
 describe "#show" do
-  ...
+  # ...
 end
 ```
 

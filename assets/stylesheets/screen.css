@@ -105,3 +105,7 @@ blockquote {
 .fa-l1nkedin:before {
   content: "\f0e1";
 }
+.highlight pre {
+  margin: 10px;
+}
+
