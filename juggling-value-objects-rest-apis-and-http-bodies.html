@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<!--[if lt IE 7]>      <html class="no-js lt-ie9 lt-ie8 lt-ie7"> <![endif]-->
+<!--[if IE 7]>         <html class="no-js lt-ie9 lt-ie8"> <![endif]-->
+<!--[if IE 8]>         <html class="no-js lt-ie9"> <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js"> <!--<![endif]-->
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+<title>Juggling Value Objects, REST APIs and HTTP bodies &larr; Vinicius Horewicz</title>
+<meta name="viewport" content="width=device-width">
+<meta name="author" content="Vinicius Horewicz (wicz)">
+<meta name="description" content="wicz' personal notes">
+<link rel="alternate" type="application/atom+xml" href="/atom.xml" title="RSS feed" />
+<link rel="stylesheet" href="/assets/stylesheets/normalize.css">
+<link rel="stylesheet" href="/assets/stylesheets/monokai.css">
+<link rel="stylesheet" href="/assets/stylesheets/main.css">
+<link rel="stylesheet" href="/assets/stylesheets/screen.css">
+<link href="//netdna.bootstrapcdn.com/font-awesome/4.0.0/css/font-awesome.css" rel="stylesheet">
+<link href="//fonts.googleapis.com/css?family=Roboto:400,300,300italic|Roboto+Slab:300|Ubuntu+Mono" rel="stylesheet" type="text/css">
+<script src="/assets/javascripts/modernizr-2.6.2.min.js"></script>
+</head>
+<body>
+<div class="container">
+  <p><a href="/">&larr; index</a></p>
+
+<section class="post-content">
+  <header>
+    <h1>Juggling Value Objects, REST APIs and HTTP bodies</h1>
+    <time datetime="2014-11-24T00:00:00+01:00" pubdate>24 November 2014</time>
+  </header>
+
+  <article>
+    <p>Domain-driven design (DDD) and REST are well-known concepts and
+practices used by most of the web developers. Both help to achieve
+better software by promoting a maintainable codebase and expressive
+APIs. However, there are some cases these ideas do not play well
+together.</p>
+
+<h2 id="a-quick-ddd-recap">A Quick DDD Recap</h2>
+
+<p>DDD defines artifacts to express models from the business domains. We
+will focus on three: <em>Entities</em>, <em>Value Objects</em> and <em>Aggregates</em>.</p>
+
+<p>An <em>Entity</em> is an object that is defined by its identity. An identity is
+an identifier that distinguish each entity uniquely, e.g. the social
+security number of an individual or the primary key in a relational
+database.</p>
+
+<p>Suppose the following example. We retrieve the same <code>User (id=1)</code> twice
+from the database. The <code>eql?</code> method returns <code>true</code> despite the objects
+are allocated in different portions of the memory. That happens because
+the comparison is based on the <code>User#id</code>.</p>
+
+<div class="highlight"><pre><code class="language-ruby"><span class="n">user_a</span> <span class="o">=</span> <span class="no">User</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">user_b</span> <span class="o">=</span> <span class="no">User</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+
+<span class="n">user_a</span><span class="o">.</span><span class="n">eql?</span><span class="p">(</span><span class="n">user_b</span><span class="p">)</span> <span class="c1"># true</span></code></pre></div>
+
+<p>A <em>Value Object</em> is an object that is defined by the values of its
+attributes. It does not have a conceptual identity. One good example is
+a <code>Location(lat, lng)</code> object. It does not need a unique identifier
+because its attributes—latitude and longitude—already define it.</p>
+
+<p>They are also immutable, i.e. we cannot change an attribute. Should we
+need different attributes, we have to instantiate a new object.</p>
+
+<p>When comparing value objects, we take into account the values of the
+attributes.</p>
+
+<div class="highlight"><pre><code class="language-ruby"><span class="n">caffe_nero</span>  <span class="o">=</span> <span class="no">Location</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="mi">45</span><span class="p">,</span> <span class="o">-</span><span class="mi">90</span><span class="p">)</span>
+<span class="n">good_coffee</span> <span class="o">=</span> <span class="no">Location</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="mi">45</span><span class="p">,</span> <span class="o">-</span><span class="mi">90</span><span class="p">)</span>
+
+<span class="n">caffe_nero</span><span class="o">.</span><span class="n">eql?</span><span class="p">(</span><span class="n">coffee_shop</span><span class="p">)</span> <span class="c1"># true</span></code></pre></div>
+
+<p>An <em>Aggregate</em> is a collection of objects bound together by a root
+entity called <em>aggregate root</em>. The objects in this collection may be
+either <em>entities</em> or <em>value objects</em>, e.g. a todo list with a collection of
+tasks or a line chart with a collection of points, respectively.</p>
+
+<p>Another property of an <em>Aggregate</em> is that the root acts like a boundary
+that separates objects in the inside—the collection—from the
+outside. Also, it is the only object that holds references to the
+internal objects. Therefore, when the root is deleted, all objects from
+the aggregate are removed as well.</p>
+
+<p>When in a database, only the root should be retrieved directly. The
+aggregate objects should be obtained through associations.</p>
+
+<div class="highlight"><pre><code class="language-ruby"><span class="n">todo</span>  <span class="o">=</span> <span class="no">Todo</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">tasks</span> <span class="o">=</span> <span class="n">todo</span><span class="o">.</span><span class="n">tasks</span></code></pre></div>
+
+<h2 id="time-to-rest">Time to REST</h2>
+
+<p>REST works fine with <em>entities</em> because all operations related to them
+are based on their identities. However, things can get unease with
+<em>value objects</em> given the lack of a unique identifier.</p>
+
+<p>Suppose we are creating an app to keep track of heights and weights of
+people. A person has a set of body measurements along time. Our REST
+(JSON) API and design would look like this:</p>
+
+<div class="highlight"><pre><code class="language-console"><span class="go">POST    /people</span>
+<span class="go">GET     /people/:id</span>
+<span class="go">DELETE  /people/:id</span>
+<span class="go">POST    /people/:id/measurements</span>
+<span class="go">DELETE  /people/:id/measurements</span></code></pre></div>
+
+<p><img src="/assets/images/18eedfcb.png" alt="UML class diagram" class="center" /></p>
+
+<p><code>Person</code> objects are <em>entities</em> and <code>Measurement</code> are <em>value objects</em>.
+In the database we will have a <code>people</code> table and the <code>measurements</code>
+will be serialized in a column within the table.</p>
+
+<p>Creating a new measurement is pretty straightforward. Send a <code>POST</code> to
+the endpoint with the values in the request body. But how do we delete a
+measurement?</p>
+
+<h2 id="value-objects-and-the-http-spec">Value Objects and the HTTP spec</h2>
+
+<p>As said earlier, <em>value objects</em> are identified by the values of their
+attributes, so we have to find a way to pass these attributes as
+parameters in the HTTP request.</p>
+
+<p>Sending simple parameters in a <code>GET</code> or <code>DELETE</code> is very easy. The
+parameters can be passed in the query string as key/value pairs.</p>
+
+<p>However, passing complex objects is slightly complex, because the HTTP
+spec does not guarantee the presence the of a request body for those
+types of requests.</p>
+
+<p>From <a href="http://tools.ietf.org/html/rfc2616#section-4.3">RFC 2616, HTTP/1.1, Section 4.3</a></p>
+
+<blockquote>
+  <p>A server SHOULD read and forward a message-body on any request; if the
+  request method does not include defined semantics for an entity-body,
+  then the message-body SHOULD be ignored when handling the request.</p>
+</blockquote>
+
+<p>From <a href="http://tools.ietf.org/html/rfc7231#section-4.3.5">RFC 7231, HTTP/1.1 Semantics and Content, Section 4.3.5</a></p>
+
+<blockquote>
+  <p>A payload within a DELETE request message has no defined semantics;
+  sending a payload body on a DELETE request might cause some existing
+  implementations to reject the request.</p>
+</blockquote>
+
+<p>Although the spec does not forbid the request body for <code>DELETE</code> and
+<code>GET</code> requests, it indicates that it SHOULD be ignored.</p>
+
+<h2 id="what-should-i-do-then">What should I do then?</h2>
+
+<p>One option is to pass all parameters as simple query string key/value
+pairs, e.g.</p>
+
+<div class="highlight"><pre><code class="language-console"><span class="go">DELETE /people/:id/measurements?examined_at=2014-11-22&amp;height=185&amp;weight=105</span></code></pre></div>
+
+<p>Another is to follow what the <a href="http://restfulobjects.org">Restful Objects
+Specification</a> suggests, that is parameters
+should be serialized and encoded within the URL. For example, to delete</p>
+
+<div class="highlight"><pre><code class="language-json"><span class="p">{</span>
+  <span class="nt">&quot;measurement&quot;</span><span class="p">:</span> <span class="p">{</span>
+    <span class="nt">&quot;examined_at&quot;</span><span class="p">:</span> <span class="s2">&quot;2014-11-22&quot;</span><span class="p">,</span>
+    <span class="nt">&quot;height&quot;</span><span class="p">:</span> <span class="mi">185</span><span class="p">,</span>
+    <span class="nt">&quot;weight&quot;</span><span class="p">:</span> <span class="mi">105</span>
+  <span class="p">}</span>
+<span class="p">}</span></code></pre></div>
+
+<p>We would do</p>
+
+<div class="highlight"><pre><code class="language-console"><span class="go">DELETE /people/:id/measurements?%7B%0A%20%20%22measurement%22%3A%20%7B%0A%20%20%20%20%22examined_at%22%3A%20%222014-11-22%22%2C%0A%20%20%20%20%22height%22%3A%20185%2C%0A%20%20%20%20%22weight%22%3A%20105%0A%20%20%7D%0A%7D%0A</span></code></pre></div>
+
+<p>One last option would be to send the payload as the request body
+regardless what the HTTP spec say.</p>
+
+<p>The first two solutions strictly follow the HTTP spec. We still need to
+make sure the length of the request URI does not exceed the limit
+accepted by the
+<a href="http://nginx.org/en/docs/http/ngx_http_core_module.html#large_client_header_buffers">HTTP</a>
+<a href="http://httpd.apache.org/docs/2.4/mod/core.html#limitrequestline">server</a>—very
+unlikely though. On the down side, server and client need an extra
+effort massaging the data.</p>
+
+<p>Sending complex objects in the request body is much simpler and, IMHO,
+offers a more cohesive solution. <code>GET</code>, <code>POST</code>, <code>PUT/PATCH</code> and <code>DELETE</code>
+play by the same rules: they all send JSON right into the wire.</p>
+
+<p>Be aware though, some servers and clients may not preserve the request
+body (which could lead to long daunting debugging hours). Special
+attention to proxies, they may also silently strip out the body.</p>
+
+<h2 id="final-words">Final Words</h2>
+
+<p>In case you decide to take the risk and ignore the HTTP spec for the
+sake of a simpler solution you are welcome. You can, like me, stand on
+the shoulders of giants like elasticsearch (<a href="http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/search-request-body.html">request body
+search</a>,
+<a href="http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/docs-delete-by-query.html">delete by
+query</a>).</p>
+
+<p>I am not advocating against query strings. It just seems to me that when
+working with <strong>complex objects</strong> in a JSON API, using the request body
+is a better solution.</p>
+
+<p>Ultimately, as always, YMMV. As long as you are aware of the possible
+architectural issues and inform your API consumers, you should not have
+a problem.</p>
+
+
+  </article>
+</section>
+
+<!-- Enable Disqus comments -->
+<div id="disqus_thread"></div>
+<script type="text/javascript">
+  var disqus_shortname = 'horewicz';
+  var disqus_identifier = '/juggling-value-objects-rest-apis-and-http-bodies';
+  var disqus_url = 'http://horewi.cz/juggling-value-objects-rest-apis-and-http-bodies.html';
+  (function() {
+    var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+    dsq.src = 'http://' + disqus_shortname + '.disqus.com/embed.js';
+    (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+  })();
+</script>
+
+
+
+  <footer>
+    <a href="about.html">
+  <i class="fa fa-info-circle fa-fw fa-lg"></i>
+</a>
+<a href="https://www.linkedin.com/in/viniciushorewicz">
+  <i class="fa fa-l1nkedin fa-fw fa-lg"></i>
+</a>
+<a href="https://github.com/wicz">
+  <i class="fa fa-github fa-fw fa-lg"></i>
+</a>
+<a href="https://twitter.com/wicz">
+  <i class="fa fa-tw1tter fa-fw fa-lg"></i>
+</a>
+<a href="https://stackoverflow.com/users/3243455/wicz">
+  <i class="fa fa-stack-overflow fa-fw fa-lg"></i>
+</a>
+<a href="/assets/wicz.pub.asc">
+  <i class="fa fa-lock fa-fw fa-lg"></i>
+</a>
+<a href="/atom.xml">
+  <i class="fa fa-rss fa-fw fa-lg"></i>
+</a>
+
+
+  </footer>
+</div>
+
+<script type="text/javascript">
+  var _gaq=[['_setAccount','UA-8480243-3'],['_trackPageview']];
+  (function(d,t){var g=d.createElement(t),s=d.getElementsByTagName(t)[0];
+   g.src=('https:'==location.protocol?'//ssl':'//www')+'.google-analytics.com/ga.js';
+   s.parentNode.insertBefore(g,s)}(document,'script'));
+</script>
+</body>
+</html>
+

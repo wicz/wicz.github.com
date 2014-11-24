@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<!--[if lt IE 7]>      <html class="no-js lt-ie9 lt-ie8 lt-ie7"> <![endif]-->
+<!--[if IE 7]>         <html class="no-js lt-ie9 lt-ie8"> <![endif]-->
+<!--[if IE 8]>         <html class="no-js lt-ie9"> <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js"> <!--<![endif]-->
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+<title>Primitive Obsession &larr; Vinicius Horewicz</title>
+<meta name="viewport" content="width=device-width">
+<meta name="author" content="Vinicius Horewicz (wicz)">
+<meta name="description" content="wicz' personal notes">
+<link rel="alternate" type="application/atom+xml" href="/atom.xml" title="RSS feed" />
+<link rel="stylesheet" href="/assets/stylesheets/normalize.css">
+<link rel="stylesheet" href="/assets/stylesheets/monokai.css">
+<link rel="stylesheet" href="/assets/stylesheets/main.css">
+<link rel="stylesheet" href="/assets/stylesheets/screen.css">
+<link href="//netdna.bootstrapcdn.com/font-awesome/4.0.0/css/font-awesome.css" rel="stylesheet">
+<link href="//fonts.googleapis.com/css?family=Roboto:400,300,300italic|Roboto+Slab:300|Ubuntu+Mono" rel="stylesheet" type="text/css">
+<script src="/assets/javascripts/modernizr-2.6.2.min.js"></script>
+</head>
+<body>
+<div class="container">
+  <p><a href="/">&larr; index</a></p>
+
+<section class="post-content">
+  <header>
+    <h1>Primitive Obsession</h1>
+    <time datetime="2013-09-11T00:00:00+02:00" pubdate>11 September 2013</time>
+  </header>
+
+  <article>
+    <p><a href="http://c2.com/cgi/wiki?PrimitiveObsession">Primitive obsession</a> is a
+fairly common code smell. It happens when you use primitive data types,
+like integers, strings, arrays, to represent concepts from your domain,
+e.g. using float to represent money.</p>
+
+<p>The fix is apparently simple. Just create a new class to represent the
+concept. <a href="http://www.jamesshore.com/Blog/PrimitiveObsession.html">James Shore supports this
+idea</a>. Even if
+you end up creating small classes, they will eventually grow.</p>
+
+<p>I believe creating classes thinking they will grow is just
+<a href="http://c2.com/cgi/wiki?BigDesignUpFront">BDUF</a>. Dealing with primitive
+obsession is much more than just creating new classes. It is based on:</p>
+
+<ol>
+  <li>deep comprehension of your domain to create meaningful classes that
+represents key concepts to make the code more communicative;</li>
+  <li>removing duplication and augmenting cohesion, leading to a more
+expressive and maintainable code.</li>
+</ol>
+
+<p>J.B. Rainsberger (jbrains) shared his thoughts in this
+<a href="http://blog.thecodewhisperer.com/2013/03/04/primitive-obsession-obsession/">post</a>
+and in this great <a href="http://vimeo.com/9870277">video</a> with Corey Haines.
+It is only 14-minutes long, really worth watching.</p>
+
+<p>I like jbrains’ thinking about <strong>complex ideas</strong> and <strong>contexts</strong>. These
+concepts are respectively related to creating meaningful classes and the
+model domain said above.</p>
+
+<p><a href="http://www.codinghorror.com/blog/2006/05/code-smells.html">Jeff Atwood</a>
+also takes complexity in account when coping with primitive obsession.
+He suggests: <em>“If your data type is sufficiently complex, write a class
+to represent it.”</em></p>
+
+<p>Duplicate code and low cohesion go hand in hand. Low cohesion makes
+related ideas spread wildly through out the codebase, which leads to
+duplicate code to handle those values. This symptoms generally are from
+primitives types being overused and a new class is begging to be
+created.</p>
+
+<p>In practice, I would not create an <code>Age</code> class for user profiles in a
+video rental software. Using primitive integer in this context works
+just fine. On the other hand, I would probably create one for a biology
+laboratory software which the age of months or even days can have great
+impact on the system.</p>
+
+<p>And even if a concept is not that essential to a domain, e.g. we want to
+store the location of restaurants for an online booking service. I would
+be tempted to create a <code>GeoLocation</code> class, because pairs of <code>[lat,
+lon]</code> are extremely low cohesive, unexpressive and complex enough, thus
+they deserve a class of its own. This will avoid duplication and provide
+<a href="http://solnic.eu/2012/06/25/get-rid-of-that-code-smell-primitive-obsession.html">better encapsulation and slim
+API</a>.</p>
+
+
+  </article>
+</section>
+
+<!-- Enable Disqus comments -->
+<div id="disqus_thread"></div>
+<script type="text/javascript">
+  var disqus_shortname = 'horewicz';
+  var disqus_identifier = '/primitive-obsession';
+  var disqus_url = 'http://horewi.cz/primitive-obsession.html';
+  (function() {
+    var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+    dsq.src = 'http://' + disqus_shortname + '.disqus.com/embed.js';
+    (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+  })();
+</script>
+
+
+
+  <footer>
+    <a href="about.html">
+  <i class="fa fa-info-circle fa-fw fa-lg"></i>
+</a>
+<a href="https://www.linkedin.com/in/viniciushorewicz">
+  <i class="fa fa-l1nkedin fa-fw fa-lg"></i>
+</a>
+<a href="https://github.com/wicz">
+  <i class="fa fa-github fa-fw fa-lg"></i>
+</a>
+<a href="https://twitter.com/wicz">
+  <i class="fa fa-tw1tter fa-fw fa-lg"></i>
+</a>
+<a href="https://stackoverflow.com/users/3243455/wicz">
+  <i class="fa fa-stack-overflow fa-fw fa-lg"></i>
+</a>
+<a href="/assets/wicz.pub.asc">
+  <i class="fa fa-lock fa-fw fa-lg"></i>
+</a>
+<a href="/atom.xml">
+  <i class="fa fa-rss fa-fw fa-lg"></i>
+</a>
+
+
+  </footer>
+</div>
+
+<script type="text/javascript">
+  var _gaq=[['_setAccount','UA-8480243-3'],['_trackPageview']];
+  (function(d,t){var g=d.createElement(t),s=d.getElementsByTagName(t)[0];
+   g.src=('https:'==location.protocol?'//ssl':'//www')+'.google-analytics.com/ga.js';
+   s.parentNode.insertBefore(g,s)}(document,'script'));
+</script>
+</body>
+</html>
+

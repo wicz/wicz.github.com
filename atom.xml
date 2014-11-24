@@ -1,0 +1,1628 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+ <title>Vinicius Horewicz</title>
+ <link href="http://horewi.cz/atom.xml" rel="self"/>
+ <link href="http://horewi.cz/"/>
+ <updated>2014-11-24T15:17:34+01:00</updated>
+ <id>http://horewi.cz/</id>
+ <author>
+   <name>Vinicius Horewicz</name>
+   <email>vinicius@horewi.cz</email>
+ </author>
+ 
+ <entry>
+   <title>Juggling Value Objects, REST APIs and HTTP bodies</title>
+   <link href="http://horewi.cz/juggling-value-objects-rest-apis-and-http-bodies.html"/>
+   <updated>2014-11-24T00:00:00+01:00</updated>
+   <id>http://horewi.cz/juggling-value-objects-rest-apis-and-http-bodies</id>
+   <content type="html">&lt;p&gt;Domain-driven design (DDD) and REST are well-known concepts and
+practices used by most of the web developers. Both help to achieve
+better software by promoting a maintainable codebase and expressive
+APIs. However, there are some cases these ideas do not play well
+together.&lt;/p&gt;
+
+&lt;h2 id=&quot;a-quick-ddd-recap&quot;&gt;A Quick DDD Recap&lt;/h2&gt;
+
+&lt;p&gt;DDD defines artifacts to express models from the business domains. We
+will focus on three: &lt;em&gt;Entities&lt;/em&gt;, &lt;em&gt;Value Objects&lt;/em&gt; and &lt;em&gt;Aggregates&lt;/em&gt;.&lt;/p&gt;
+
+&lt;p&gt;An &lt;em&gt;Entity&lt;/em&gt; is an object that is defined by its identity. An identity is
+an identifier that distinguish each entity uniquely, e.g. the social
+security number of an individual or the primary key in a relational
+database.&lt;/p&gt;
+
+&lt;p&gt;Suppose the following example. We retrieve the same &lt;code&gt;User (id=1)&lt;/code&gt; twice
+from the database. The &lt;code&gt;eql?&lt;/code&gt; method returns &lt;code&gt;true&lt;/code&gt; despite the objects
+are allocated in different portions of the memory. That happens because
+the comparison is based on the &lt;code&gt;User#id&lt;/code&gt;.&lt;/p&gt;
+
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-ruby&quot;&gt;&lt;span class=&quot;n&quot;&gt;user_a&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;no&quot;&gt;User&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;find&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;user_b&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;no&quot;&gt;User&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;find&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+
+&lt;span class=&quot;n&quot;&gt;user_a&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;eql?&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;user_b&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;c1&quot;&gt;# true&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;A &lt;em&gt;Value Object&lt;/em&gt; is an object that is defined by the values of its
+attributes. It does not have a conceptual identity. One good example is
+a &lt;code&gt;Location(lat, lng)&lt;/code&gt; object. It does not need a unique identifier
+because its attributes—latitude and longitude—already define it.&lt;/p&gt;
+
+&lt;p&gt;They are also immutable, i.e. we cannot change an attribute. Should we
+need different attributes, we have to instantiate a new object.&lt;/p&gt;
+
+&lt;p&gt;When comparing value objects, we take into account the values of the
+attributes.&lt;/p&gt;
+
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-ruby&quot;&gt;&lt;span class=&quot;n&quot;&gt;caffe_nero&lt;/span&gt;  &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;no&quot;&gt;Location&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;new&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;45&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;90&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;good_coffee&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;no&quot;&gt;Location&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;new&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;45&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;90&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+
+&lt;span class=&quot;n&quot;&gt;caffe_nero&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;eql?&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;coffee_shop&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;c1&quot;&gt;# true&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;An &lt;em&gt;Aggregate&lt;/em&gt; is a collection of objects bound together by a root
+entity called &lt;em&gt;aggregate root&lt;/em&gt;. The objects in this collection may be
+either &lt;em&gt;entities&lt;/em&gt; or &lt;em&gt;value objects&lt;/em&gt;, e.g. a todo list with a collection of
+tasks or a line chart with a collection of points, respectively.&lt;/p&gt;
+
+&lt;p&gt;Another property of an &lt;em&gt;Aggregate&lt;/em&gt; is that the root acts like a boundary
+that separates objects in the inside—the collection—from the
+outside. Also, it is the only object that holds references to the
+internal objects. Therefore, when the root is deleted, all objects from
+the aggregate are removed as well.&lt;/p&gt;
+
+&lt;p&gt;When in a database, only the root should be retrieved directly. The
+aggregate objects should be obtained through associations.&lt;/p&gt;
+
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-ruby&quot;&gt;&lt;span class=&quot;n&quot;&gt;todo&lt;/span&gt;  &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;no&quot;&gt;Todo&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;find&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;tasks&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;todo&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;tasks&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;time-to-rest&quot;&gt;Time to REST&lt;/h2&gt;
+
+&lt;p&gt;REST works fine with &lt;em&gt;entities&lt;/em&gt; because all operations related to them
+are based on their identities. However, things can get unease with
+&lt;em&gt;value objects&lt;/em&gt; given the lack of a unique identifier.&lt;/p&gt;
+
+&lt;p&gt;Suppose we are creating an app to keep track of heights and weights of
+people. A person has a set of body measurements along time. Our REST
+(JSON) API and design would look like this:&lt;/p&gt;
+
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-console&quot;&gt;&lt;span class=&quot;go&quot;&gt;POST    /people&lt;/span&gt;
+&lt;span class=&quot;go&quot;&gt;GET     /people/:id&lt;/span&gt;
+&lt;span class=&quot;go&quot;&gt;DELETE  /people/:id&lt;/span&gt;
+&lt;span class=&quot;go&quot;&gt;POST    /people/:id/measurements&lt;/span&gt;
+&lt;span class=&quot;go&quot;&gt;DELETE  /people/:id/measurements&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/images/18eedfcb.png&quot; alt=&quot;UML class diagram&quot; class=&quot;center&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;Person&lt;/code&gt; objects are &lt;em&gt;entities&lt;/em&gt; and &lt;code&gt;Measurement&lt;/code&gt; are &lt;em&gt;value objects&lt;/em&gt;.
+In the database we will have a &lt;code&gt;people&lt;/code&gt; table and the &lt;code&gt;measurements&lt;/code&gt;
+will be serialized in a column within the table.&lt;/p&gt;
+
+&lt;p&gt;Creating a new measurement is pretty straightforward. Send a &lt;code&gt;POST&lt;/code&gt; to
+the endpoint with the values in the request body. But how do we delete a
+measurement?&lt;/p&gt;
+
+&lt;h2 id=&quot;value-objects-and-the-http-spec&quot;&gt;Value Objects and the HTTP spec&lt;/h2&gt;
+
+&lt;p&gt;As said earlier, &lt;em&gt;value objects&lt;/em&gt; are identified by the values of their
+attributes, so we have to find a way to pass these attributes as
+parameters in the HTTP request.&lt;/p&gt;
+
+&lt;p&gt;Sending simple parameters in a &lt;code&gt;GET&lt;/code&gt; or &lt;code&gt;DELETE&lt;/code&gt; is very easy. The
+parameters can be passed in the query string as key/value pairs.&lt;/p&gt;
+
+&lt;p&gt;However, passing complex objects is slightly complex, because the HTTP
+spec does not guarantee the presence the of a request body for those
+types of requests.&lt;/p&gt;
+
+&lt;p&gt;From &lt;a href=&quot;http://tools.ietf.org/html/rfc2616#section-4.3&quot;&gt;RFC 2616, HTTP/1.1, Section 4.3&lt;/a&gt;&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;A server SHOULD read and forward a message-body on any request; if the
+  request method does not include defined semantics for an entity-body,
+  then the message-body SHOULD be ignored when handling the request.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;From &lt;a href=&quot;http://tools.ietf.org/html/rfc7231#section-4.3.5&quot;&gt;RFC 7231, HTTP/1.1 Semantics and Content, Section 4.3.5&lt;/a&gt;&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;A payload within a DELETE request message has no defined semantics;
+  sending a payload body on a DELETE request might cause some existing
+  implementations to reject the request.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;Although the spec does not forbid the request body for &lt;code&gt;DELETE&lt;/code&gt; and
+&lt;code&gt;GET&lt;/code&gt; requests, it indicates that it SHOULD be ignored.&lt;/p&gt;
+
+&lt;h2 id=&quot;what-should-i-do-then&quot;&gt;What should I do then?&lt;/h2&gt;
+
+&lt;p&gt;One option is to pass all parameters as simple query string key/value
+pairs, e.g.&lt;/p&gt;
+
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-console&quot;&gt;&lt;span class=&quot;go&quot;&gt;DELETE /people/:id/measurements?examined_at=2014-11-22&amp;amp;height=185&amp;amp;weight=105&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;Another is to follow what the &lt;a href=&quot;http://restfulobjects.org&quot;&gt;Restful Objects
+Specification&lt;/a&gt; suggests, that is parameters
+should be serialized and encoded within the URL. For example, to delete&lt;/p&gt;
+
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-json&quot;&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+  &lt;span class=&quot;nt&quot;&gt;&amp;quot;measurement&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;nt&quot;&gt;&amp;quot;examined_at&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&amp;quot;2014-11-22&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+    &lt;span class=&quot;nt&quot;&gt;&amp;quot;height&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;185&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+    &lt;span class=&quot;nt&quot;&gt;&amp;quot;weight&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;105&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;We would do&lt;/p&gt;
+
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-console&quot;&gt;&lt;span class=&quot;go&quot;&gt;DELETE /people/:id/measurements?%7B%0A%20%20%22measurement%22%3A%20%7B%0A%20%20%20%20%22examined_at%22%3A%20%222014-11-22%22%2C%0A%20%20%20%20%22height%22%3A%20185%2C%0A%20%20%20%20%22weight%22%3A%20105%0A%20%20%7D%0A%7D%0A&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;One last option would be to send the payload as the request body
+regardless what the HTTP spec say.&lt;/p&gt;
+
+&lt;p&gt;The first two solutions strictly follow the HTTP spec. We still need to
+make sure the length of the request URI does not exceed the limit
+accepted by the
+&lt;a href=&quot;http://nginx.org/en/docs/http/ngx_http_core_module.html#large_client_header_buffers&quot;&gt;HTTP&lt;/a&gt;
+&lt;a href=&quot;http://httpd.apache.org/docs/2.4/mod/core.html#limitrequestline&quot;&gt;server&lt;/a&gt;—very
+unlikely though. On the down side, server and client need an extra
+effort massaging the data.&lt;/p&gt;
+
+&lt;p&gt;Sending complex objects in the request body is much simpler and, IMHO,
+offers a more cohesive solution. &lt;code&gt;GET&lt;/code&gt;, &lt;code&gt;POST&lt;/code&gt;, &lt;code&gt;PUT/PATCH&lt;/code&gt; and &lt;code&gt;DELETE&lt;/code&gt;
+play by the same rules: they all send JSON right into the wire.&lt;/p&gt;
+
+&lt;p&gt;Be aware though, some servers and clients may not preserve the request
+body (which could lead to long daunting debugging hours). Special
+attention to proxies, they may also silently strip out the body.&lt;/p&gt;
+
+&lt;h2 id=&quot;final-words&quot;&gt;Final Words&lt;/h2&gt;
+
+&lt;p&gt;In case you decide to take the risk and ignore the HTTP spec for the
+sake of a simpler solution you are welcome. You can, like me, stand on
+the shoulders of giants like elasticsearch (&lt;a href=&quot;http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/search-request-body.html&quot;&gt;request body
+search&lt;/a&gt;,
+&lt;a href=&quot;http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/docs-delete-by-query.html&quot;&gt;delete by
+query&lt;/a&gt;).&lt;/p&gt;
+
+&lt;p&gt;I am not advocating against query strings. It just seems to me that when
+working with &lt;strong&gt;complex objects&lt;/strong&gt; in a JSON API, using the request body
+is a better solution.&lt;/p&gt;
+
+&lt;p&gt;Ultimately, as always, YMMV. As long as you are aware of the possible
+architectural issues and inform your API consumers, you should not have
+a problem.&lt;/p&gt;
+
+</content>
+ </entry>
+ 
+ <entry>
+   <title>Thoughts on Better Communication</title>
+   <link href="http://horewi.cz/thoughts-on-better-communication.html"/>
+   <updated>2014-09-22T00:00:00+02:00</updated>
+   <id>http://horewi.cz/thoughts-on-better-communication</id>
+   <content type="html">&lt;p&gt;If I had to point one thing I value the most and strive to improve on
+ever project I work, I would say it is: &lt;strong&gt;Better&lt;/strong&gt; Communication.&lt;/p&gt;
+
+&lt;p&gt;I am purposely highlighting “Better” because communication is not,
+thereby should never be treated as, a static asset. As peers who want to
+convey a message, we ought to constantly look for means to improve and
+do it as clear as possible.&lt;/p&gt;
+
+&lt;p&gt;We all have seen this before. Projects and products fail completely,
+even when delivered on time and budget. How? Chiefly because people fail
+to express themselves clearly, leading to misconceptions and unachieved
+expectations.&lt;/p&gt;
+
+&lt;p&gt;There are plenty ways of communication: verbally, written, with
+drawings, symbols, gestures; even a single look could say a lot.
+Regardless the method, the message should always be &lt;strong&gt;objective&lt;/strong&gt;,
+&lt;strong&gt;clear&lt;/strong&gt;, &lt;strong&gt;legible&lt;/strong&gt; and &lt;strong&gt;meaningful&lt;/strong&gt;. It is also important to use
+the appropriate language the context demands.&lt;/p&gt;
+
+&lt;p&gt;Luckily there are a variety of tools to help. As a project manager,
+defining an &lt;a href=&quot;http://martinfowler.com/bliki/UbiquitousLanguage.html&quot;&gt;&lt;em&gt;Ubiquitous
+Language&lt;/em&gt;&lt;/a&gt; can
+make the conversation more objective and clear. The use of
+&lt;a href=&quot;http://www.mountaingoatsoftware.com/agile/scrum/task-boards&quot;&gt;&lt;em&gt;Storyboards&lt;/em&gt;&lt;/a&gt;
+and &lt;em&gt;&lt;a href=&quot;http://www.impactmapping.org/&quot;&gt;Impact Mapping&lt;/a&gt;&lt;/em&gt; gives a clear view
+of the planning and current state of the project, and the relationship
+and interaction of its roles. The use of &lt;em&gt;&lt;a href=&quot;http://www.acceptancetesting.info/&quot;&gt;Specification by
+example&lt;/a&gt;&lt;/em&gt; helps turning abstract
+requirements into realistic examples, defining a common ground for the
+expectations of all parties.&lt;/p&gt;
+
+&lt;p&gt;When coding, we are communicating as well. Hence we should equally care
+how good we are delivering our messages. As software developers, we
+should strive to create simple—but also flexible and
+adaptable—design to help convey our ideas. &lt;a href=&quot;http://xprogramming.com/what-is-extreme-programming/#test&quot;&gt;&lt;em&gt;Test-driven
+development&lt;/em&gt;&lt;/a&gt;
+plays a vital role in this field. Code—&lt;em&gt;tests are code too!&lt;/em&gt;—should
+be &lt;a href=&quot;https://leanpub.com/4rulesofsimpledesign&quot;&gt;intention revealing and
+DRY&lt;/a&gt; with &lt;a href=&quot;http://blog.thecodewhisperer.com/2013/12/07/putting-an-age-old-battle-to-rest/&quot;&gt;improved
+naming&lt;/a&gt;.
+Ultimately, as an avowed advocate of those, I could not miss mentioning
+the use of  &lt;a href=&quot;http://www.poodr.com/&quot;&gt;&lt;em&gt;Object-Oriented Design and
+Programming&lt;/em&gt;&lt;/a&gt;,  &lt;a href=&quot;https://en.wikipedia.org/wiki/Behavior-driven_development&quot;&gt;&lt;em&gt;Behaviour-driven
+Development&lt;/em&gt;&lt;/a&gt;
+and &lt;a href=&quot;http://designpatternsinruby.com/&quot;&gt;Design Patterns&lt;/a&gt; to improve
+software design, and therefore, its communication.&lt;/p&gt;
+
+&lt;p&gt;Humans are social animals. We  gather together, we interact and
+communicate . And we ought to do it effectively. Better Communication is
+the key to successful projects, products and software. It deserves your
+fully attention. Make no mistake about it.&lt;/p&gt;
+
+</content>
+ </entry>
+ 
+ <entry>
+   <title>Detaching Resources: Detached Search Service</title>
+   <link href="http://horewi.cz/detaching-resources-detached-search-service.html"/>
+   <updated>2013-11-01T00:00:00+01:00</updated>
+   <id>http://horewi.cz/detaching-resources-detached-search-service</id>
+   <content type="html">&lt;p&gt;In the &lt;a href=&quot;detaching-resources-architecture-foundation.html&quot;&gt;previous
+post&lt;/a&gt;, we have
+reviewed the basics about virtualization, learned about Docker and set
+up a container running RabbitMQ. In this post, we will create a web app
+with a search service. The interesting part is that the former will be
+completely decoupled from the latter.&lt;/p&gt;
+
+&lt;p&gt;Regardless of being very contrived, the following example gives us a
+pretty good bird’s-eye view and the basics for building web apps towards
+a service-oriented architecture.&lt;/p&gt;
+
+&lt;h2 id=&quot;a-bit-more-docker&quot;&gt;A bit more Docker&lt;/h2&gt;
+
+&lt;p&gt;First we will need to build a container able to run our ruby services.
+Thanks to docker’s abilities of reusing images, we can create a new
+image to suit our needs pretty easily by inheriting from another image.&lt;/p&gt;
+
+&lt;p&gt;I used &lt;a href=&quot;https://index.docker.io/u/binaryphile/ruby/&quot;&gt;this image&lt;/a&gt; as the
+base for my experiment, and added on top of it essential packages like
+&lt;code&gt;curl&lt;/code&gt;, &lt;code&gt;monit&lt;/code&gt; and &lt;code&gt;openssh-server&lt;/code&gt;. You can my new image
+&lt;a href=&quot;https://github.com/wicz/detaching-resources/tree/master/v1/docker-ruby&quot;&gt;here&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;Given our goal is to create a fully distributed system, we will start
+three docker containers, each for the following services: the message
+&lt;em&gt;queue&lt;/em&gt;, the &lt;em&gt;web&lt;/em&gt; app and the &lt;em&gt;search&lt;/em&gt; engine.&lt;/p&gt;
+
+&lt;p&gt;Every time you start a container, docker assigns it a new IP address.
+This means we have to get the IP address—via &lt;code&gt;docker inspect&lt;/code&gt;—of the
+&lt;em&gt;queue&lt;/em&gt; container, to set it on the other containers.&lt;/p&gt;
+
+&lt;p&gt;To avoid this intense manual labor, we can use
+&lt;a href=&quot;https://github.com/jpetazzo/pipework/&quot;&gt;pipework&lt;/a&gt; to set up a private
+network. We will define static IP addresses for the containers and share
+them using environment variables.&lt;/p&gt;
+
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-console&quot;&gt;&lt;span class=&quot;gp&quot;&gt;#&lt;/span&gt; spin up containers
+&lt;span class=&quot;gp&quot;&gt;$&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;QUEUE&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;$(&lt;/span&gt;docker run -d wicz/rabbitmq&lt;span class=&quot;k&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;gp&quot;&gt;$&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;WEB&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;$(&lt;/span&gt;docker run -e &lt;span class=&quot;nv&quot;&gt;QUEUE_HOST&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;10.11.12.1 -d wicz/ruby&lt;span class=&quot;k&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;gp&quot;&gt;$&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;SEARCH&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;$(&lt;/span&gt;docker run -e &lt;span class=&quot;nv&quot;&gt;QUEUE_HOST&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;10.11.12.1 -d wicz/ruby&lt;span class=&quot;k&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;gp&quot;&gt;#&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;set &lt;/span&gt;IP addresses &lt;span class=&quot;k&quot;&gt;for&lt;/span&gt; containers
+&lt;span class=&quot;gp&quot;&gt;$&lt;/span&gt; pipework br1 &lt;span class=&quot;nv&quot;&gt;$QUEUE&lt;/span&gt;  10.11.12.1/24
+&lt;span class=&quot;gp&quot;&gt;$&lt;/span&gt; pipework br1 &lt;span class=&quot;nv&quot;&gt;$WEB&lt;/span&gt;    10.11.12.2/24
+&lt;span class=&quot;gp&quot;&gt;$&lt;/span&gt; pipework br1 &lt;span class=&quot;nv&quot;&gt;$SEARCH&lt;/span&gt; 10.11.12.3/24
+&lt;span class=&quot;gp&quot;&gt;#&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;enable &lt;/span&gt;host to access the private network
+&lt;span class=&quot;gp&quot;&gt;$&lt;/span&gt; ifconfig br1 10.11.12.254/24&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;Docker 0.7 has a new feature to
+&lt;a href=&quot;http://docs.docker.io/en/latest/examples/linking_into_redis/&quot;&gt;“link”&lt;/a&gt;
+containers together. With this, we can skip the pipework set up, because
+docker will populate the environments variables with the IP addresses it
+automatically assigns and with the exposed ports.&lt;/p&gt;
+
+&lt;h2 id=&quot;testing-the-services&quot;&gt;Testing the services&lt;/h2&gt;
+
+&lt;p&gt;With the ruby containers and the message queue running, we can set up
+the web and search services. We will clone the repository in both
+containers and start the respective services.&lt;/p&gt;
+
+&lt;p&gt;First we need to clone the repository in both &lt;em&gt;web&lt;/em&gt; and &lt;em&gt;search&lt;/em&gt;
+containers:&lt;/p&gt;
+
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-console&quot;&gt;&lt;span class=&quot;gp&quot;&gt;$&lt;/span&gt; ssh root@10.11.12.&lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;2,3&lt;span class=&quot;o&quot;&gt;}&lt;/span&gt; git clone https://github.com/wicz/detaching-resources.git /opt/dr&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;For the &lt;em&gt;search&lt;/em&gt; container we need to start the consumer daemon:&lt;/p&gt;
+
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-console&quot;&gt;&lt;span class=&quot;go&quot;&gt;search$ cd /opt/dr/v2/search&lt;/span&gt;
+&lt;span class=&quot;go&quot;&gt;search$ bundle exec ruby bin/search_consumer.rb&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;And for the &lt;em&gt;web&lt;/em&gt; container we need to start the consumer and the web
+server:&lt;/p&gt;
+
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-console&quot;&gt;&lt;span class=&quot;go&quot;&gt;web$ cd /opt/dr/v2/web&lt;/span&gt;
+&lt;span class=&quot;go&quot;&gt;web$ bundle exec ruby bin/web_consumer.rb&lt;/span&gt;
+&lt;span class=&quot;go&quot;&gt;web$ bundle exec ruby web.rb -o 0.0.0.0 &amp;amp;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;Now point your browser to the web server and you should see a simple
+page with a search form. Whatever search you do will redirect to another
+page with “Searching…” written on it. Wait a few seconds, refresh this
+page and you should see “It works!”.&lt;/p&gt;
+
+&lt;p&gt;Since I am running the docker container inside a Vagrant VM, I
+forwarded a local port to the web server in the &lt;em&gt;web&lt;/em&gt; container to be
+able to use my browser in the OS X.&lt;/p&gt;
+
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-console&quot;&gt;&lt;span class=&quot;gp&quot;&gt;$&lt;/span&gt; vagrant ssh -- -L 8001:10.11.12.2:4567
+&lt;span class=&quot;gp&quot;&gt;#&lt;/span&gt; open http://localhost:8001&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;behind-the-scenes&quot;&gt;Behind the scenes&lt;/h2&gt;
+
+&lt;p&gt;The example is naive, not to mention it always returns the same result
+for every search. But the significance in it, is to note &lt;strong&gt;how&lt;/strong&gt; the
+results are generated and the services exchange messages, and not
+&lt;strong&gt;what&lt;/strong&gt; they are.&lt;/p&gt;
+
+&lt;p&gt;When you hit the “Submit” button, the web app creates a new &lt;code&gt;Search&lt;/code&gt;
+object and invokes the &lt;code&gt;SearchService&lt;/code&gt; to send it to a queue named
+&lt;code&gt;dr.searches&lt;/code&gt;. Then the client is redirect to a page with the search
+results. Since it has not been processed yet, it shows the
+“Searching…” placeholder.&lt;/p&gt;
+
+&lt;p&gt;On the other container, the search daemon consumes messages from
+&lt;code&gt;dr.searches&lt;/code&gt; queue. It unserializes the message, changes its content
+and send it back to another queue named &lt;code&gt;dr.searches.results&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;The &lt;code&gt;SearchConsumer&lt;/code&gt; knows nothing about the web app, the database
+&lt;code&gt;SearchRepository&lt;/code&gt; or even the &lt;code&gt;Search&lt;/code&gt; object. All it knows is how to
+handle JSON data. Its perfect because we have created a completely
+decoupled solution. As long as we do not change the JSON specification,
+we can change whatever we want in the web app and the search engine will
+continue working. We can also create other apps that use the same search
+engine.&lt;/p&gt;
+
+&lt;p&gt;Back in the &lt;em&gt;web&lt;/em&gt; container, the &lt;code&gt;SearchResultsConsumer&lt;/code&gt; receives the
+search results from the &lt;code&gt;dr.searches.results&lt;/code&gt; queue. It unserializes the
+JSON and updates the results in the database.&lt;/p&gt;
+
+&lt;h2 id=&quot;conclusion&quot;&gt;Conclusion&lt;/h2&gt;
+
+&lt;p&gt;We have successfully set up our detached services solution. With a few
+amendments in the business logic, I think it could be used in production
+environments. If you need a similar solution and do not have the time or
+energy to improve this one, I suggest giving
+&lt;a href=&quot;https://github.com/gocardless/hutch&quot;&gt;Hutch&lt;/a&gt; from GoCardless a try.&lt;/p&gt;
+
+&lt;p&gt;Given the message queue is fully working, we could easily set up another
+services like long running jobs, e.g. image manipulation or reports
+generation, by just creating new consumers.&lt;/p&gt;
+
+&lt;p&gt;Try this examples yourself. I would love to hear your thoughts on the
+subject. Comments are open!&lt;/p&gt;
+
+</content>
+ </entry>
+ 
+ <entry>
+   <title>Detaching Resources: Architecture foundation</title>
+   <link href="http://horewi.cz/detaching-resources-architecture-foundation.html"/>
+   <updated>2013-10-21T00:00:00+02:00</updated>
+   <id>http://horewi.cz/detaching-resources-architecture-foundation</id>
+   <content type="html">&lt;p&gt;&lt;em&gt;Detaching Resources is as series about my personal findings and
+experiments on building web applications in a service-oriented fashion.
+The title and content are based on “Backing Services” from the
+&lt;a href=&quot;http://12factor.net/&quot;&gt;Twelve-Factor App&lt;/a&gt; methodology.&lt;/em&gt;&lt;/p&gt;
+
+&lt;h2 id=&quot;a-quick-introduction-on-virtualization&quot;&gt;A Quick Introduction on Virtualization&lt;/h2&gt;
+
+&lt;p&gt;&lt;a href=&quot;https://en.wikipedia.org/wiki/Virtualization&quot;&gt;Virtualization&lt;/a&gt;, as the
+name suggests, is the act of creating a virtual version of something. It
+can be used to create virtual hardware, operating system, memory (swap),
+network (VPN), storage (RAID), etc. We will focus on the first two.&lt;/p&gt;
+
+&lt;p&gt;Hardware virtualization is probably the most known type. You certainly
+have heard of virtual machines (VM) and softwares like Parallels, VMware
+and VirtualBox. It allows you run, for instance, Linux inside Mac OS X.
+Since it creates an entire virtual computer, it can become very
+heavyweight, CPU and memory hungry.&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&quot;https://en.wikipedia.org/wiki/Operating_system-level_virtualization&quot;&gt;Operating system (OS)
+virtualization&lt;/a&gt;
+acts in the OS kernel layer. It creates lightweight virtual environments
+(VE or containers), because they use the host OS’ system call. There is
+no need of an intermediate VM; and still being completely isolated. On
+the other hand, it is not as flexible as the hardware virtualization,
+since the guest and host OS must be the same.
+&lt;a href=&quot;http://linux-vserver.org&quot;&gt;Linux-VServer&lt;/a&gt;, &lt;a href=&quot;http://openvz.org/&quot;&gt;OpenVZ&lt;/a&gt;
+and &lt;a href=&quot;http://linuxcontainers.org/&quot;&gt;Linux Containers (LXC)&lt;/a&gt; are examples
+of implementations of this technology.&lt;/p&gt;
+
+&lt;p&gt;LXC is the newest implementation of OS virtualization in Linux. It is
+based on the &lt;a href=&quot;https://en.wikipedia.org/wiki/Cgroups&quot;&gt;Linux kernel
+cgroups&lt;/a&gt; (control groups) to
+limit, account and isolate hardware resources of process groups. LXC is
+considered as something between a “chroot on steroids” and a full VM.
+Its goal is to create an environment as close as possible to a standard
+Linux installation, but without the need of a separate kernel.&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&quot;http://www.docker.io/&quot;&gt;Docker&lt;/a&gt; provides a high level API on top of LXC.
+It automates the creation of containers based on a Dockerfile, making it
+repeatable and consistent. It allows container versioning with git-like
+capabilities. Allows reuse. Any container can be used as a base image to
+create new ones. It encourages sharing. Anyone can upload a container to
+their public registry. The
+&lt;a href=&quot;https://github.com/dotcloud/docker-registry&quot;&gt;registry&lt;/a&gt; can also be used
+in your private servers.&lt;/p&gt;
+
+&lt;h2 id=&quot;hands-on-docker&quot;&gt;Hands on Docker&lt;/h2&gt;
+
+&lt;p&gt;To install Docker, check its
+&lt;a href=&quot;http://docs.docker.io/en/latest/&quot;&gt;documentation&lt;/a&gt; for your OS. It is
+comprehensive and easy to follow.&lt;/p&gt;
+
+&lt;p&gt;If you are using a Mac OS X, you need Linux running in a VM. Docker
+already makes our lives easier by supporting Vagrant. All you need is to
+install &lt;a href=&quot;https://www.virtualbox.org/&quot;&gt;VirtualBox&lt;/a&gt; and
+&lt;a href=&quot;http://www.vagrantup.com/&quot;&gt;Vagrant&lt;/a&gt; and then&lt;/p&gt;
+
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-console&quot;&gt;&lt;span class=&quot;gp&quot;&gt;$&lt;/span&gt; git clone https://github.com/dotcloud/docker.git
+&lt;span class=&quot;gp&quot;&gt;$&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;cd &lt;/span&gt;docker
+&lt;span class=&quot;gp&quot;&gt;$&lt;/span&gt; vagrant up
+&lt;span class=&quot;gp&quot;&gt;$&lt;/span&gt; vagrant ssh&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;The docker daemon should be already running as root. Since the user
+&lt;code&gt;vagrant&lt;/code&gt; is in the group &lt;code&gt;docker&lt;/code&gt;, it is not necessary to run the
+&lt;code&gt;docker&lt;/code&gt; CLI with sudo.&lt;/p&gt;
+
+&lt;p&gt;To get the basics on Docker, I suggest you follow their &lt;a href=&quot;http://www.docker.io/gettingstarted/#h_tutorial&quot;&gt;interactive
+tutorial&lt;/a&gt;. You will
+learn how to &lt;code&gt;pull&lt;/code&gt; container images from the &lt;a href=&quot;https://index.docker.io/&quot;&gt;index
+repository&lt;/a&gt;, &lt;code&gt;run&lt;/code&gt; the container, &lt;code&gt;commit&lt;/code&gt;
+your changes and &lt;code&gt;push&lt;/code&gt; it back to the repository. I will skip straight
+to the use of a &lt;code&gt;Dockerfile&lt;/code&gt;, where things get more interesting.&lt;/p&gt;
+
+&lt;h2 id=&quot;the-dockerfile&quot;&gt;The Dockerfile&lt;/h2&gt;
+
+&lt;p&gt;The &lt;code&gt;Dockerfile&lt;/code&gt; contains the set of
+&lt;a href=&quot;http://docs.docker.io/en/latest/use/builder/&quot;&gt;steps&lt;/a&gt; docker will
+use to reproduce the system images.&lt;/p&gt;
+
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code&gt;# Dockerfile
+FROM ubuntu:latest
+MAINTAINER Vinicius Horewicz &amp;lt;vinicius@horewi.cz&amp;gt;
+
+RUN sed -i.bak &quot;s/main$/main universe/&quot; /etc/apt/sources.list
+RUN apt-get update
+RUN apt-get upgrade -y
+RUN locale-gen en_US en_US.UTF-8
+RUN echo &quot;root:root&quot; | chpasswd
+
+# initctl workaround
+RUN dpkg-divert --local --rename --add /sbin/initctl
+RUN ln -s /bin/true /sbin/initctl
+
+# prevent services from starting automatically
+RUN echo exit 101 &amp;gt; /usr/sbin/policy-rc.d
+RUN chmod +x /usr/sbin/policy-rc.d
+
+RUN apt-get install -y curl monit openssh-server rabbitmq-server
+
+# disable upstart for SSH
+RUN mv /etc/init/ssh.conf /etc/init/ssh.conf.dist
+
+ADD ./etc/monit/sshd.conf     /etc/monit/conf.d/sshd.conf
+ADD ./etc/monit/rabbitmq.conf /etc/monit/conf.d/rabbitmq.conf
+
+# run monit in foreground
+CMD [&quot;/usr/bin/monit&quot;, &quot;-I&quot;]
+
+EXPOSE 22 :5672
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;Dockerfiles follow the format &lt;code&gt;INSTRUCTION arguments&lt;/code&gt;. &lt;strong&gt;The first
+instruction must be&lt;/strong&gt; &lt;code&gt;FROM&lt;/code&gt;. It specifies the base image from which we
+will build.&lt;/p&gt;
+
+&lt;p&gt;Images names are in the format &lt;code&gt;user/image:tag&lt;/code&gt;. Where &lt;code&gt;user&lt;/code&gt; is the
+username of its creator [in the repository]. When it is not specified,
+means you are using official images from the Docker team. &lt;code&gt;image&lt;/code&gt; is the
+image name. Images can be tagged, just like git. That is the reason of
+the &lt;code&gt;tag&lt;/code&gt; argument. When omitted, the value &lt;code&gt;latest&lt;/code&gt; is assumed.&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;RUN&lt;/code&gt; instruction runs a command and commits the result at the build
+time. Every &lt;code&gt;RUN&lt;/code&gt; means a new image is committed, which serves as a base
+for the next instruction. Thanks to the this
+&lt;a href=&quot;http://docs.docker.io/en/latest/terms/layer/&quot;&gt;layered&lt;/a&gt; approach and to
+&lt;a href=&quot;http://aufs.sourceforge.net/&quot;&gt;AuFS&lt;/a&gt;, Docker can cache build steps,
+making them blazing fast.&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;ADD&lt;/code&gt; commands will copy files from &lt;code&gt;&amp;lt;src&amp;gt;&lt;/code&gt; to &lt;code&gt;&amp;lt;dest&amp;gt;&lt;/code&gt;. Source can be a
+file or directory relative to the source directory being built or a
+remote file URL. Destination is the path in the container. &lt;code&gt;ADD&lt;/code&gt; is not
+cached (&lt;a href=&quot;https://github.com/dotcloud/docker/issues/880&quot;&gt;yet?&lt;/a&gt;).&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;CMD&lt;/code&gt; specifies the command to be executed when the container is started.
+&lt;strong&gt;There can exist only one in a Dockerfile. If there are more than one,
+only the last will take effect.&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;EXPOSE&lt;/code&gt; sets port to be publicly exposed when running the container. It
+is specified as &lt;code&gt;[PUBLIC:]PRIVATE&lt;/code&gt;. When PUBLIC is omitted, a random port
+is assigned. If you want to use the same port for public and private,
+you can specify only &lt;code&gt;:PRIVATE&lt;/code&gt;.&lt;/p&gt;
+
+&lt;h2 id=&quot;running-the-container&quot;&gt;Running the Container&lt;/h2&gt;
+
+&lt;p&gt;You start the container with the &lt;code&gt;docker run&lt;/code&gt; command. It will run the
+specified &lt;code&gt;CMD&lt;/code&gt;. &lt;strong&gt;When this process completes, the container is fully
+stopped.&lt;/strong&gt; Think about containers as “process in a box”. This is why we
+must run the &lt;code&gt;CMD&lt;/code&gt; in foreground instead of using a daemon or running
+&lt;code&gt;/etc/init.d/monit start&lt;/code&gt; in &lt;code&gt;CMD&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;One might ask: Why monit? Remember a container run only one process and
+stops right after this process ends. Even though a container can
+&lt;a href=&quot;https://github.com/dotcloud/docker/issues/223&quot;&gt;start&lt;/a&gt;
+&lt;a href=&quot;https://github.com/dotcloud/docker/pull/898&quot;&gt;with&lt;/a&gt;
+&lt;a href=&quot;https://github.com/dotcloud/docker/pull/1267&quot;&gt;/sbin/init&lt;/a&gt;, docker still
+has some &lt;a href=&quot;https://github.com/dotcloud/docker/issues/2276&quot;&gt;issues with
+upstart&lt;/a&gt;, so we will use
+monit to start and keep our process running.&lt;/p&gt;
+
+&lt;p&gt;We still have to do
+&lt;a href=&quot;https://github.com/dotcloud/docker/issues/1024#issuecomment-20018600&quot;&gt;some&lt;/a&gt;
+&lt;a href=&quot;http://jpetazzo.github.io/2013/10/06/policy-rc-d-do-not-start-services-automatically/&quot;&gt;workarounds&lt;/a&gt;
+and disable upstart for some services to be able to use init.d scripts.&lt;/p&gt;
+
+&lt;h2 id=&quot;the-final-result&quot;&gt;The Final Result&lt;/h2&gt;
+
+&lt;p&gt;The final result is available in this
+&lt;a href=&quot;https://github.com/wicz/detaching-resources/tree/master/v1&quot;&gt;repository&lt;/a&gt;.
+I have created basic monitrc files for SSH and RabbitMQ, so monit can
+start these services.  If you want to give it a try:&lt;/p&gt;
+
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-console&quot;&gt;&lt;span class=&quot;gp&quot;&gt;$&lt;/span&gt; git clone https://github.com/wicz/detaching-resources.git
+&lt;span class=&quot;gp&quot;&gt;$&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;cd &lt;/span&gt;detaching-resources/v1/docker-rabbitmq
+&lt;span class=&quot;gp&quot;&gt;$&lt;/span&gt; docker build -t &amp;lt;yourusername&amp;gt;/rabbitmq .
+&lt;span class=&quot;gp&quot;&gt;$&lt;/span&gt; docker run -t &amp;lt;yourusername&amp;gt;/rabbitmq&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;Finally, we have set up the architecture foundation. In the next post of
+the series we will start implementing services which will exchange
+messages through this message queue container.&lt;/p&gt;
+
+</content>
+ </entry>
+ 
+ <entry>
+   <title>Primitive Obsession</title>
+   <link href="http://horewi.cz/primitive-obsession.html"/>
+   <updated>2013-09-11T00:00:00+02:00</updated>
+   <id>http://horewi.cz/primitive-obsession</id>
+   <content type="html">&lt;p&gt;&lt;a href=&quot;http://c2.com/cgi/wiki?PrimitiveObsession&quot;&gt;Primitive obsession&lt;/a&gt; is a
+fairly common code smell. It happens when you use primitive data types,
+like integers, strings, arrays, to represent concepts from your domain,
+e.g. using float to represent money.&lt;/p&gt;
+
+&lt;p&gt;The fix is apparently simple. Just create a new class to represent the
+concept. &lt;a href=&quot;http://www.jamesshore.com/Blog/PrimitiveObsession.html&quot;&gt;James Shore supports this
+idea&lt;/a&gt;. Even if
+you end up creating small classes, they will eventually grow.&lt;/p&gt;
+
+&lt;p&gt;I believe creating classes thinking they will grow is just
+&lt;a href=&quot;http://c2.com/cgi/wiki?BigDesignUpFront&quot;&gt;BDUF&lt;/a&gt;. Dealing with primitive
+obsession is much more than just creating new classes. It is based on:&lt;/p&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;deep comprehension of your domain to create meaningful classes that
+represents key concepts to make the code more communicative;&lt;/li&gt;
+  &lt;li&gt;removing duplication and augmenting cohesion, leading to a more
+expressive and maintainable code.&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;J.B. Rainsberger (jbrains) shared his thoughts in this
+&lt;a href=&quot;http://blog.thecodewhisperer.com/2013/03/04/primitive-obsession-obsession/&quot;&gt;post&lt;/a&gt;
+and in this great &lt;a href=&quot;http://vimeo.com/9870277&quot;&gt;video&lt;/a&gt; with Corey Haines.
+It is only 14-minutes long, really worth watching.&lt;/p&gt;
+
+&lt;p&gt;I like jbrains’ thinking about &lt;strong&gt;complex ideas&lt;/strong&gt; and &lt;strong&gt;contexts&lt;/strong&gt;. These
+concepts are respectively related to creating meaningful classes and the
+model domain said above.&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&quot;http://www.codinghorror.com/blog/2006/05/code-smells.html&quot;&gt;Jeff Atwood&lt;/a&gt;
+also takes complexity in account when coping with primitive obsession.
+He suggests: &lt;em&gt;“If your data type is sufficiently complex, write a class
+to represent it.”&lt;/em&gt;&lt;/p&gt;
+
+&lt;p&gt;Duplicate code and low cohesion go hand in hand. Low cohesion makes
+related ideas spread wildly through out the codebase, which leads to
+duplicate code to handle those values. This symptoms generally are from
+primitives types being overused and a new class is begging to be
+created.&lt;/p&gt;
+
+&lt;p&gt;In practice, I would not create an &lt;code&gt;Age&lt;/code&gt; class for user profiles in a
+video rental software. Using primitive integer in this context works
+just fine. On the other hand, I would probably create one for a biology
+laboratory software which the age of months or even days can have great
+impact on the system.&lt;/p&gt;
+
+&lt;p&gt;And even if a concept is not that essential to a domain, e.g. we want to
+store the location of restaurants for an online booking service. I would
+be tempted to create a &lt;code&gt;GeoLocation&lt;/code&gt; class, because pairs of &lt;code&gt;[lat,
+lon]&lt;/code&gt; are extremely low cohesive, unexpressive and complex enough, thus
+they deserve a class of its own. This will avoid duplication and provide
+&lt;a href=&quot;http://solnic.eu/2012/06/25/get-rid-of-that-code-smell-primitive-obsession.html&quot;&gt;better encapsulation and slim
+API&lt;/a&gt;.&lt;/p&gt;
+
+</content>
+ </entry>
+ 
+ <entry>
+   <title>Composed Method</title>
+   <link href="http://horewi.cz/composed-method.html"/>
+   <updated>2013-08-30T00:00:00+02:00</updated>
+   <id>http://horewi.cz/composed-method</id>
+   <content type="html">&lt;p&gt;You certainly have read poorly written essays with two, three or even
+more ideas all cluttered together in the one paragraph. The same can
+happen with code. You certainly have seen or written long methods which
+were doing much more than they should.&lt;/p&gt;
+
+&lt;p&gt;The mechanics to solve this code smell is fairly simple.  All you need
+is to break the long method in smaller ones. The reasoning, however, on
+how to break things apart can be tricky, because you do not want to
+create meaningless anemic methods.&lt;/p&gt;
+
+&lt;p&gt;Kent Beck suggests in Smalltalk Best Practices Patterns to divide your
+program into methods that perform one identifiable task and keep all of
+the operations in a method at the same level of abstraction. Joshua
+Kerievsky, in Refactoring to Patterns, follows the same path suggesting
+to transform the logic into a small number of intention-revealing steps
+at the same level of detail.&lt;/p&gt;
+
+&lt;p&gt;I like to think on the Unix philosophy. A method should do one thing and
+do it well. And if we think about SOLID principles, we should apply the
+Single Responsability Principle (SRP) to methods as well.&lt;/p&gt;
+
+&lt;p&gt;Developing maintainable software involves communicative and expressive
+code, and small methods play an import role to achieve this. They
+encapsulate the details, making the code easier to read and test.&lt;/p&gt;
+
+</content>
+ </entry>
+ 
+ <entry>
+   <title>Scrum vs Continuous Delivery</title>
+   <link href="http://horewi.cz/scrum-vs-continuous-delivery.html"/>
+   <updated>2013-08-16T00:00:00+02:00</updated>
+   <id>http://horewi.cz/scrum-vs-continuous-delivery</id>
+   <content type="html">&lt;p&gt;A while ago I had the displeasure of hearing from a Project Manager
+(PM):&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;“I don’t do Scrum, I do Continuous Delivery”&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;All of a sudden there were no more sprint planning, review and
+retrospective meetings. Developers started working in a “production
+line”, solving bugs from the tracking system. Misery all over.&lt;/p&gt;
+
+&lt;p&gt;His argument was that working with Continuous Delivery (CD) he would
+gain productivity releasing software faster. Clearly the PM
+misunderstood some important concepts. Let’s clear things up.&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&quot;http://www.scrumguides.org/&quot;&gt;Scrum&lt;/a&gt; is an agile process based on
+time-boxed iterations &lt;em&gt;during which&lt;/em&gt; usable and potentially releasable
+product increment is created; and the Product Owner may choose to
+&lt;em&gt;immediately release it&lt;/em&gt;.&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&quot;http://martinfowler.com/bliki/ContinuousDelivery.html&quot;&gt;CD&lt;/a&gt; is a
+discipline where you build software in a way it can be &lt;em&gt;released to
+production at any time&lt;/em&gt;. It is about keeping the system in a
+production-ready state. It has nothing to do with releasing software
+earlier or making sprints shorter.&lt;/p&gt;
+
+&lt;p&gt;Based on the definitions, it is clear that if you have software that is
+production-ready, you may choose to release it at any time, even during
+the iteration. &lt;strong&gt;The “release” is not related to the sprint review
+meeting.&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;Scrum and CD can perfectly work together. In fact, both should be used
+whenever it is possible. CD improves Scrum shortening the feedback loop,
+allowing quicker responses for changes, hence leading to a better
+product.&lt;/p&gt;
+
+&lt;p&gt;If you can have the best of both worlds, why not do it so?&lt;/p&gt;
+
+</content>
+ </entry>
+ 
+ <entry>
+   <title>Stop for a second and think about it</title>
+   <link href="http://horewi.cz/stop-for-a-second-and-think-about-it.html"/>
+   <updated>2013-05-27T00:00:00+02:00</updated>
+   <id>http://horewi.cz/stop-for-a-second-and-think-about-it</id>
+   <content type="html">&lt;p&gt;A while ago I got asked two questions. Two simple, not to say
+unpretentious, questions. And that simplicity is the real beauty.  We
+all know &lt;em&gt;the Devil is in the details&lt;/em&gt;, and those questions, they
+hide a lot.&lt;/p&gt;
+
+&lt;p&gt;I loved answering them—specially the second—because they made me
+write down, in a couple of sentences, about things that are so usual in
+our busy lives that we sometimes ignore or take for granted. It was a
+good reflection exercise I think it is worth sharing.&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;&lt;em&gt;Why is TDD a good thing? Why is it bad?&lt;/em&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;I like Kent Beck’s definition of TDD as &lt;em&gt;test-first + incremental
+design&lt;/em&gt;. And tests being automated, of course. It is great because it
+allows the developer to alter the codebase in a sustainable way, backed
+up with the safety net of the tests.&lt;/p&gt;
+
+&lt;p&gt;I do not think it is bad at all, unless you are doing something wrong.
+For example, if your test suite takes too long to run and you think this
+slows your development, chances are this is not the tests fault, but of
+a tightly coupled design. Or maybe your unit tests are constantly
+hitting the database, it may be a bad implementation. In some rare
+cases, it is not worth to automate all your tests upfront, but not
+having them is not an option.&lt;/p&gt;
+
+&lt;p&gt;Some may say is a waste because it takes too much time writing code the
+user will not actively benefit from. Part of this may be true. It may
+take some time writing code that is not a feature of the system, but it
+pays off with a consistent software design and drastically reducing the
+time spent finding and fixing bugs.&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;&lt;em&gt;What could lead you to smash your computer because of us?&lt;/em&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;&lt;strong&gt;Rework.&lt;/strong&gt; I hate wasting time, specially when I have to work on things
+that should have been done right in the first place, but were not
+because someone was lazy or did &lt;a href=&quot;http://gojko.net/2012/05/31/how-to-solve-not-enough-time/&quot;&gt;not have enough
+time&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Implementing hypothesis that were not validated.&lt;/strong&gt; People tend to
+think they have “killer ideas”. Do not ask me to do anything until it
+has been proven worth doing. Read &lt;a href=&quot;http://runninglean.co/&quot;&gt;Running Lean&lt;/a&gt;
+to understand my point of view.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Bureaucracy and pointless meetings.&lt;/strong&gt; I am agile, lean and pragmatic.
+Let’s not waste our precious time on things that will take us from
+nothing to nowhere.&lt;/p&gt;
+
+</content>
+ </entry>
+ 
+ <entry>
+   <title>Constraints Driven Development</title>
+   <link href="http://horewi.cz/constraints-driven-development.html"/>
+   <updated>2013-05-20T00:00:00+02:00</updated>
+   <id>http://horewi.cz/constraints-driven-development</id>
+   <content type="html">&lt;blockquote&gt;
+  &lt;p&gt;&lt;em&gt;”. . . every time you write code, you’re experimenting. . . .
+Usually, I’ll make a specific kind of constraint for myself . . . and
+see how it shapes my code. And if I like it, I might roll that into
+the main project or I might just throw it out . . .”&lt;/em&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;&lt;a href=&quot;https://twitter.com/dkubb&quot;&gt;Dan Kubb&lt;/a&gt; said that during the &lt;a href=&quot;http://rubyrogues.com/047-rr-coding-disciplines/&quot;&gt;047 Ruby
+Rogues podcast&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;This is, without a doubt, the most inspiring thing I have listened in
+the last 12 months. I have been following the same technique for a
+while, and I am confident to say it is a great tool to help us hone
+our craft.&lt;/p&gt;
+
+&lt;p&gt;So, I invite you to experiment new things in your code. It does not
+matter if it is an elaborated design pattern or a simple variable
+naming rule. Pick a constraint, anyone, and force yourself using it for
+the next couple of hours. If you feel it is improving your code, e.g.
+easier testing, more readability or expressiveness, loosely coupling,
+etc., keep it. But if it is not, drop it, otherwise you may be
+wasting time. Next are some examples you can try.&lt;/p&gt;
+
+&lt;p&gt;During the same podcast, Dan mentioned he had been using &lt;strong&gt;strict
+command query separation (CQS) for every method&lt;/strong&gt; he wrote. And if it
+was a command, he was returning &lt;code&gt;self&lt;/code&gt; to enable chaining.&lt;/p&gt;
+
+&lt;p&gt;Dan also commented how he solved the problem of
+&lt;a href=&quot;https://github.com/seattlerb/heckle&quot;&gt;Heckle&lt;/a&gt; taking too long to mutate
+his code. He &lt;a href=&quot;https://github.com/dkubb/axiom/blob/41991aa4e97baba55dee144ea1aa98ed57d4b2d1/spec/unit/axiom/relation/class_methods/coerce_spec.rb&quot;&gt;&lt;strong&gt;split test files per
+method&lt;/strong&gt;&lt;/a&gt;,
+so he could mutate specific tiny parts of the system and cut down
+execution time.&lt;/p&gt;
+
+&lt;p&gt;Speaking of
+&lt;a href=&quot;http://en.wikipedia.org/wiki/Command%E2%80%93query_separation&quot;&gt;CQS&lt;/a&gt;,
+&lt;a href=&quot;https://twitter.com/sandimetz&quot;&gt;Sandi Metz&lt;/a&gt; gave a &lt;a href=&quot;http://www.justin.tv/confreaks/c/2247122&quot;&gt;talk&lt;/a&gt;
+&lt;a href=&quot;https://speakerdeck.com/skmetz/magic-tricks-of-testing-railsconf&quot;&gt;(slides)&lt;/a&gt;
+at &lt;a href=&quot;http://www.railsconf.com&quot;&gt;RailsConf 2013&lt;/a&gt; on how to unit test
+command and queries. She proposed some testing rules and defined a
+schema called: &lt;strong&gt;The Unit Testing Minimalist&lt;/strong&gt;.&lt;/p&gt;
+
+&lt;p&gt;Sandi also proposed &lt;strong&gt;four rules for developers&lt;/strong&gt; in the &lt;a href=&quot;http://rubyrogues.com/087-rr-book-clubpractical-object-oriented-design-in-ruby-with-sandi-metz/&quot;&gt;087 Ruby Rogues
+podcast&lt;/a&gt;.
+The guys from thoughtbot also
+&lt;a href=&quot;http://robots.thoughtbot.com/post/50655960596/sandi-metz-rules-for-developers&quot;&gt;shared&lt;/a&gt;
+their experience applying these rules, and how elegantly they had satisfied
+one of the constraints.&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&quot;http://www.xpteam.com&quot;&gt;Jeff Bay&lt;/a&gt; proposed nine “rules of thumb” to
+better software design in the essay entitled &lt;strong&gt;Object Calisthenics&lt;/strong&gt; in
+the &lt;a href=&quot;http://pragprog.com/book/twa/thoughtworks-anthology&quot;&gt;ThoughtWorks
+Anthology&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;These are enough examples to start. You &lt;del&gt;can&lt;/del&gt; shall
+define your own constraints too. One of my actual constraints is to
+completely &lt;strong&gt;take apart routing definitions from controllers specs&lt;/strong&gt;.
+This helps me define better &lt;a href=&quot;http://warpspire.com/posts/url-design/&quot;&gt;URL
+design&lt;/a&gt; and treat
+controllers more like normal classes instead of some magic black box
+which receives requests. And I think controllers should not know
+anything about routing and HTTP verbs anyway, so it is making sense for
+now.&lt;/p&gt;
+
+&lt;p&gt;I ended turning this:&lt;/p&gt;
+
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-ruby&quot;&gt;&lt;span class=&quot;c1&quot;&gt;# spec/controllers/posts_controller_spec.rb&lt;/span&gt;
+&lt;span class=&quot;c1&quot;&gt;# Tighly coupling between routing and controller actions&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;describe&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&amp;quot;GET show&amp;quot;&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;do&lt;/span&gt;
+  &lt;span class=&quot;c1&quot;&gt;# ...&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;end&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;into this:&lt;/p&gt;
+
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-ruby&quot;&gt;&lt;span class=&quot;c1&quot;&gt;# spec/routing/posts_routing_spec.rb&lt;/span&gt;
+&lt;span class=&quot;c1&quot;&gt;# Routing knows about HTTP verbs&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;describe&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&amp;quot;Access a post&amp;quot;&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;do&lt;/span&gt;
+ &lt;span class=&quot;n&quot;&gt;it&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;expect&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;get&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;/posts/1&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;to&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;route_to&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;posts#show&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;id&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&amp;quot;1&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;end&lt;/span&gt;
+
+&lt;span class=&quot;c1&quot;&gt;# spec/controllers/posts_controller_spec.rb&lt;/span&gt;
+&lt;span class=&quot;c1&quot;&gt;# show is an ordinary method in the controller&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;describe&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&amp;quot;#show&amp;quot;&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;do&lt;/span&gt;
+  &lt;span class=&quot;c1&quot;&gt;# ...&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;end&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+</content>
+ </entry>
+ 
+ <entry>
+   <title>Chef Solo: Quick and easy cooking for one</title>
+   <link href="http://horewi.cz/chef-solo-quick-and-easy-cooking-for-one.html"/>
+   <updated>2013-04-27T00:00:00+02:00</updated>
+   <id>http://horewi.cz/chef-solo-quick-and-easy-cooking-for-one</id>
+   <content type="html">&lt;p&gt;Chef is a configuration management tool. It allows us to manage and
+automate servers configurations. It uses a Ruby DSL for writing
+blueprints—called recipes—that defines actions to be taken on the
+remote servers, e.g. install apache.&lt;/p&gt;
+
+&lt;p&gt;The &lt;a href=&quot;http://docs.opscode.com/&quot;&gt;Chef ecosystem&lt;/a&gt; is immense. Servers,
+nodes, workstations, agents, cookbooks; myriad of concepts. In this
+article I will just scratch the surface and present examples to get you
+running as quick as possible.&lt;/p&gt;
+
+&lt;h3 id=&quot;about-chef&quot;&gt;About Chef&lt;/h3&gt;
+
+&lt;p&gt;In a full Chef organization there must exist a &lt;em&gt;Chef server&lt;/em&gt; that stores
+configuration details of each server—or &lt;em&gt;node&lt;/em&gt;—in the infrastructure.
+Developers/users write &lt;em&gt;cookbooks&lt;/em&gt; (and &lt;em&gt;recipes&lt;/em&gt;) locally on their
+&lt;em&gt;workstations&lt;/em&gt;, and store the former in a &lt;em&gt;Chef repository&lt;/em&gt;. Eventually,
+users use the &lt;em&gt;knife&lt;/em&gt; command to upload data from the local Chef
+repository to the Chef server.&lt;/p&gt;
+
+&lt;p&gt;When running a small-sized infrastructure, chances are you do not need
+or want to setup a full Chef organization. Luckly, Chef provides a
+slimmer version called &lt;em&gt;chef-solo&lt;/em&gt;, which allows configuring nodes
+without the need of a Chef server.&lt;/p&gt;
+
+&lt;p&gt;There is a knife plugin called
+&lt;a href=&quot;http://matschaffer.github.io/knife-solo/&quot;&gt;knife-solo&lt;/a&gt;, that makes
+working with chef-solo easier and as powerful as with a Chef server.&lt;/p&gt;
+
+&lt;h3 id=&quot;set-up-your-kitchen&quot;&gt;Set up your kitchen&lt;/h3&gt;
+
+&lt;p&gt;To keep everything organized, create a new project (git repo) and add
+&lt;code&gt;knife-solo&lt;/code&gt; to the &lt;code&gt;Gemfile&lt;/code&gt;.&lt;/p&gt;
+
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-console&quot;&gt;&lt;span class=&quot;gp&quot;&gt;$&lt;/span&gt; git init chef-cookbooks
+&lt;span class=&quot;gp&quot;&gt;$&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;cd &lt;/span&gt;chef-cookbooks
+&lt;span class=&quot;gp&quot;&gt;$&lt;/span&gt; bundle install --path vendor/bundle --binstubs&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;Create a basic &lt;code&gt;knife&lt;/code&gt; configuration. Knife uses a RSA key pair to
+authenticate requests to the Chef Server. Even though you will not have
+one, knife still needs this client key. Create one using &lt;code&gt;ssh-keygen&lt;/code&gt;.
+Ultimately, initialize your kitchen. Make sure to enable
+&lt;a href=&quot;https://github.com/applicationsonline/librarian-chef&quot;&gt;Librarian&lt;/a&gt; to
+help you manage your cookbooks dependencies.&lt;/p&gt;
+
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-console&quot;&gt;&lt;span class=&quot;gp&quot;&gt;$&lt;/span&gt; bin/knife configure --defaults
+&lt;span class=&quot;gp&quot;&gt;$&lt;/span&gt; ssh-keygen -f ~/.chef/&lt;span class=&quot;nv&quot;&gt;$USER&lt;/span&gt;.pem
+&lt;span class=&quot;gp&quot;&gt;$&lt;/span&gt; bin/knife solo init kitchen --librarian&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h3 id=&quot;managing-cookbooks&quot;&gt;Managing cookbooks&lt;/h3&gt;
+
+&lt;p&gt;We will create a cookbook to install ruby using rbenv. Add the rbenv
+cookbook to the Librarians &lt;code&gt;Cheffile&lt;/code&gt;. The dependencies will be
+installed in the &lt;code&gt;cookbooks&lt;/code&gt; directory. There is no need to keep track
+of these files in your repository. Create your own cookbooks in the
+&lt;code&gt;site-cookbooks&lt;/code&gt; directory.&lt;/p&gt;
+
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-ruby&quot;&gt;&lt;span class=&quot;c1&quot;&gt;# Cheffile&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;site&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&amp;quot;http://community.opscode.com/api/v1&amp;quot;&lt;/span&gt;
+
+&lt;span class=&quot;n&quot;&gt;cookbook&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&amp;quot;rbenv&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;git&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&amp;quot;https://github.com/RiotGames/rbenv-cookbook&amp;quot;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-console&quot;&gt;&lt;span class=&quot;gp&quot;&gt;$&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;cd &lt;/span&gt;kitchen
+&lt;span class=&quot;gp&quot;&gt;$&lt;/span&gt; ../bin/librarian-chef install
+&lt;span class=&quot;gp&quot;&gt;$&lt;/span&gt; ../bin/knife cookbook create ruby -o site-cookbooks&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;I will cover the creation of cookbooks in another article. For now,
+will create the bare minimum to continue our example. Following the
+&lt;a href=&quot;https://github.com/RiotGames/rbenv-cookbook&quot;&gt;rbenv-cookbook&lt;/a&gt;
+documentation, add the rbenv dependency to your cookbook &lt;code&gt;metadata.rb&lt;/code&gt;
+and in the default recipe use the &lt;code&gt;rbenv_ruby&lt;/code&gt; command—aka lightweight
+resource and provider (LWRP).&lt;/p&gt;
+
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-ruby&quot;&gt;&lt;span class=&quot;c1&quot;&gt;# kitchen/site-cookbooks/ruby/metadata.rb&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;depends&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&amp;quot;rbenv&amp;quot;&lt;/span&gt;
+
+&lt;span class=&quot;c1&quot;&gt;# kitchen/site-cookbooks/ruby/recipes/default.rb&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;include_recipe&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&amp;quot;rbenv::default&amp;quot;&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;include_recipe&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&amp;quot;rbenv::ruby_build&amp;quot;&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;rbenv_ruby&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&amp;quot;1.9.3-p392&amp;quot;&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;do&lt;/span&gt;
+  &lt;span class=&quot;n&quot;&gt;global&lt;/span&gt; &lt;span class=&quot;kp&quot;&gt;true&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;end&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h3 id=&quot;setup-node-and-cook&quot;&gt;Setup node and cook&lt;/h3&gt;
+
+&lt;p&gt;I like to configure my servers in my SSH client in a way that is easy
+to remember and use. Suppose I am working on a project called
+PetProject (pp) and I have three EC2 instances: web, app and db. My
+configuration looks like this:&lt;/p&gt;
+
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code&gt;# ~/.ssh/config
+Host pp.*
+  User ubuntu
+  IdentityFile ~/.ssh/petproject.com/ubuntu
+
+Host pp.web
+  HostName ec2-54-215-126-10.sa-east-1.compute.amazonaws.com
+
+Host pp.app
+  HostName ec2-54-215-126-11.sa-east-1.compute.amazonaws.com
+
+Host pp.db
+  HostName ec2-54-215-126-12.sa-east-1.compute.amazonaws.com
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;Now I can easily &lt;code&gt;ssh pp.web&lt;/code&gt; to connect to my web server. No need to
+remember IP addresses, DNS names, user names or passwords.&lt;/p&gt;
+
+&lt;p&gt;Use knife-solo to prepare your server. It will install in the server
+all dependencies Chef requires, and will create a local configuration
+file for this server in &lt;code&gt;nodes/&amp;lt;hostname&amp;gt;.json&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;Add your recipe to the &lt;code&gt;run_list&lt;/code&gt; in the JSON file and &lt;em&gt;cook&lt;/em&gt; your
+server.&lt;/p&gt;
+
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-console&quot;&gt;&lt;span class=&quot;gp&quot;&gt;$&lt;/span&gt; ../bin/knife solo prepare pp.app
+&lt;span class=&quot;gp&quot;&gt;#&lt;/span&gt; edit nodes/pp.app.json as shown below
+&lt;span class=&quot;gp&quot;&gt;$&lt;/span&gt; ../bin/knife solo cook pp.app&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-json&quot;&gt;&lt;span class=&quot;err&quot;&gt;#&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;kitchen/nodes/pp.app.json&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;nt&quot;&gt;&amp;quot;run_list&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:[&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;recipe[ruby]&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]}&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;Finally, you have got yourself a brand new server with the latest Ruby
+1.9.3 installed on it. Even better, now you have an automated task for
+it. In case you need to setup an &lt;code&gt;app02&lt;/code&gt; server, all you need is
+&lt;em&gt;prepare&lt;/em&gt; and &lt;em&gt;cook&lt;/em&gt; it and you are ready to go.&lt;/p&gt;
+
+</content>
+ </entry>
+ 
+ <entry>
+   <title>Faster Rails 3 deployments to AWS Elastic Beanstalk</title>
+   <link href="http://horewi.cz/faster-rails-3-deployments-to-aws-elastic-beanstalk.html"/>
+   <updated>2013-04-08T00:00:00+02:00</updated>
+   <id>http://horewi.cz/faster-rails-3-deployments-to-aws-elastic-beanstalk</id>
+   <content type="html">&lt;p&gt;Web applications deployments cannot be slow. The definition of &lt;em&gt;slow&lt;/em&gt;,
+of course, is relative. I like to think &lt;em&gt;slow&lt;/em&gt; is anything that breaks
+the flow, that takes long enough to make me lose focus of what I am
+doing.&lt;/p&gt;
+
+&lt;p&gt;Recently I moved a Rails 3 app from Heroku to Amazon Elastic Beanstalk
+(EB). Deploying to Heroku was not showing the best performance results,
+but to EB was taking enough time to make me lose my patience.&lt;/p&gt;
+
+&lt;p&gt;After understanding how EB works, identifying bottlenecks,
+and caching things; I was able to reduce the time to deploy to near one
+minute.&lt;/p&gt;
+
+&lt;h3 id=&quot;eb-behind-the-scenes&quot;&gt;EB: Behind the scenes&lt;/h3&gt;
+
+&lt;p&gt;EB allows deployments in a Heroku-esque way simply executing &lt;code&gt;git
+aws.push&lt;/code&gt;. This command is actually an alias to a ruby script located
+at &lt;code&gt;.git/AWSDevTools/aws.elasticbeanstalk.push&lt;/code&gt;. It just pushes yours
+latest commit to the EB servers.&lt;/p&gt;
+
+&lt;p&gt;When EB receives the latest version of your app, it packs the source
+files in a zip archive, uploads to a S3 bucket under your account, and
+deploys to the EB environment.&lt;/p&gt;
+
+&lt;h3 id=&quot;inspecting-the-ec2-plumbing&quot;&gt;Inspecting the EC2 plumbing&lt;/h3&gt;
+
+&lt;p&gt;Analyzing the file &lt;code&gt;/var/log/eb-tools.log&lt;/code&gt;, we can see the deployment
+has hooks and scripts associated with it. The program at
+&lt;code&gt;/usr/bin/directoryHooksExecutor.py&lt;/code&gt; executes those scripts
+sequentially in alphabetical order by name.&lt;/p&gt;
+
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code&gt;2013-04-07 14:03:59,414 [INFO] (3056 MainThread) [directoryHooksExecutor.py-29] [root directoryHooksExecutor info] Executing directory: /opt/elasticbeanstalk/hooks/appdeploy/enact/
+2013-04-07 14:03:59,511 [INFO] (3056 MainThread) [directoryHooksExecutor.py-29] [root directoryHooksExecutor info] Executing script: /opt/elasticbeanstalk/hooks/appdeploy/enact/01_flip.sh
+2013-04-07 14:04:00,420 [INFO] (3056 MainThread) [directoryHooksExecutor.py-29] [root directoryHooksExecutor info] Executing script: /opt/elasticbeanstalk/hooks/appdeploy/enact/09clean.sh
+2013-04-07 14:04:00,600 [INFO] (3056 MainThread) [directoryHooksExecutor.py-29] [root directoryHooksExecutor info] Executing script: /opt/elasticbeanstalk/hooks/appdeploy/enact/99_reload_app_server.sh
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;Given EC2 (non-EBS) does not persist data, and EB auto-scale our EC2 instances,
+we cannot change these deploys scripts. However, we can &lt;a href=&quot;http://docs.aws.amazon.com/elasticbeanstalk/latest/dg/customize-containers-ec2.html&quot;&gt;customize the
+EC2&lt;/a&gt;
+with &lt;code&gt;commands&lt;/code&gt; and &lt;code&gt;container_commands&lt;/code&gt;.&lt;/p&gt;
+
+&lt;h3 id=&quot;finding-the-bottlenecks&quot;&gt;Finding the bottlenecks&lt;/h3&gt;
+
+&lt;p&gt;To customize the EC2 correctly, I first had to understand how exactly
+the commands specified in my &lt;code&gt;.ebextensions/*.config&lt;/code&gt; files act in the
+whole deployment.&lt;/p&gt;
+
+&lt;p&gt;I created the two commands below, and added to the top of each
+&lt;code&gt;/opt/elasticbeanstalk/hooks/appdeploy/**/*.sh&lt;/code&gt; script an instruction to
+create a file with the timestamp of its execution.&lt;/p&gt;
+
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-yaml&quot;&gt;&lt;span class=&quot;c1&quot;&gt;# .ebextensions/app.config&lt;/span&gt;
+&lt;span class=&quot;l-Scalar-Plain&quot;&gt;commands&lt;/span&gt;&lt;span class=&quot;p-Indicator&quot;&gt;:&lt;/span&gt;
+  &lt;span class=&quot;l-Scalar-Plain&quot;&gt;01_first_command&lt;/span&gt;&lt;span class=&quot;p-Indicator&quot;&gt;:&lt;/span&gt;
+    &lt;span class=&quot;l-Scalar-Plain&quot;&gt;command&lt;/span&gt;&lt;span class=&quot;p-Indicator&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;touch&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s&quot;&gt;/tmp/$(date&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s&quot;&gt;+&amp;#39;%T.%N&amp;#39;).command&amp;quot;&lt;/span&gt;
+&lt;span class=&quot;l-Scalar-Plain&quot;&gt;container_commands&lt;/span&gt;&lt;span class=&quot;p-Indicator&quot;&gt;:&lt;/span&gt;
+  &lt;span class=&quot;l-Scalar-Plain&quot;&gt;01_first_container_command&lt;/span&gt;&lt;span class=&quot;p-Indicator&quot;&gt;:&lt;/span&gt;
+    &lt;span class=&quot;l-Scalar-Plain&quot;&gt;command&lt;/span&gt;&lt;span class=&quot;p-Indicator&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;touch&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s&quot;&gt;/tmp/$(date&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s&quot;&gt;+&amp;#39;%T.%N&amp;#39;).container_command&amp;quot;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-sh&quot;&gt;&lt;span class=&quot;c&quot;&gt;# /opt/elasticbeanstalk/hooks/appdeploy/pre/01_unzip.sh&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;#!/usr/bin/env bash&lt;/span&gt;
+touch /tmp/&lt;span class=&quot;k&quot;&gt;$(&lt;/span&gt;date +&lt;span class=&quot;s2&quot;&gt;&amp;quot;%T.%N&amp;quot;&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;)&lt;/span&gt;.&lt;span class=&quot;k&quot;&gt;$(&lt;/span&gt;basename &lt;span class=&quot;nv&quot;&gt;$0&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;)&lt;/span&gt;
+
+. /opt/elasticbeanstalk/support/envvars
+
+mkdir -p &lt;span class=&quot;nv&quot;&gt;$EB_CONFIG_APP_BASE&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;amp;&amp;amp;&lt;/span&gt; chown &lt;span class=&quot;nv&quot;&gt;$EB_CONFIG_APP_USER&lt;/span&gt;:&lt;span class=&quot;nv&quot;&gt;$EB_CONFIG_APP_USER&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;$EB_CONFIG_APP_BASE&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt; -d &lt;span class=&quot;nv&quot;&gt;$EB_CONFIG_APP_ONDECK&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;amp;&amp;amp;&lt;/span&gt; rm -rf &lt;span class=&quot;nv&quot;&gt;$EB_CONFIG_APP_ONDECK&lt;/span&gt;
+su -c &lt;span class=&quot;s2&quot;&gt;&amp;quot;/usr/bin/unzip -d $EB_CONFIG_APP_ONDECK $EB_CONFIG_SOURCE_BUNDLE&amp;quot;&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;$EB_CONFIG_APP_USER&lt;/span&gt;
+chmod &lt;span class=&quot;m&quot;&gt;775&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;$EB_CONFIG_APP_ONDECK&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;After a deploy, I was able to see the exact sequence of the
+commands executed, and how long each one was taking. The whole process
+was taking about unconceivable &lt;strong&gt;8 minutes&lt;/strong&gt; to complete. The culprits
+for such slowness were, as suspected, gems installation and assets
+compilation.&lt;/p&gt;
+
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code&gt;$ ls -1 /tmp
+19:56:22.524828173.command
+19:56:23.188093045.01_unzip.sh
+19:56:23.524226323.02_setup_envvars.sh
+19:56:23.575868688.10_bundle_install.sh
+19:59:32.932137842.11_asset_compilation.sh
+20:04:29.588351276.12_db_migration.sh
+20:04:30.618231911.container_command
+20:04:38.656611666.01_flip.sh
+20:04:39.683074030.09clean.sh
+20:04:39.706735596.99_reload_app_server.sh
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h3 id=&quot;caching-gems-and-assets&quot;&gt;Caching gems and assets&lt;/h3&gt;
+
+&lt;p&gt;We need to cache the gems to optimize &lt;code&gt;bundle install&lt;/code&gt;, and to boost
+the asset compilation we install &lt;a href=&quot;https://github.com/ndbroadbent/turbo-sprockets-rails3&quot;&gt;Turbo
+Sprockets&lt;/a&gt; and
+cache the compiled assets as well.&lt;/p&gt;
+
+&lt;p&gt;Unfortunately, we cannot use &lt;code&gt;container_commands&lt;/code&gt;
+because we need to set up our cached files between &lt;code&gt;01_unzip.sh&lt;/code&gt; and
+&lt;code&gt;10_bundle_install.sh&lt;/code&gt;. Nor can we use &lt;code&gt;commands&lt;/code&gt;, because
+&lt;code&gt;01_unzip.sh&lt;/code&gt; cleans up the target directory before unpacking your
+source files. We can use &lt;code&gt;files&lt;/code&gt; option to inject a script to set up
+the cache.&lt;/p&gt;
+
+&lt;p&gt;Since the hook scripts are executed in alphabetical order, we need to
+name the injected script correctly to be executed just after
+&lt;code&gt;01_unzip.sh&lt;/code&gt;. We will name it &lt;code&gt;01a_bootstrap.sh&lt;/code&gt;.&lt;/p&gt;
+
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-yaml&quot;&gt;&lt;span class=&quot;l-Scalar-Plain&quot;&gt;files&lt;/span&gt;&lt;span class=&quot;p-Indicator&quot;&gt;:&lt;/span&gt;
+  &lt;span class=&quot;l-Scalar-Plain&quot;&gt;/opt/elasticbeanstalk/hooks/appdeploy/pre/01a_bootstrap.sh&lt;/span&gt;&lt;span class=&quot;p-Indicator&quot;&gt;:&lt;/span&gt;
+    &lt;span class=&quot;l-Scalar-Plain&quot;&gt;mode&lt;/span&gt;&lt;span class=&quot;p-Indicator&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;l-Scalar-Plain&quot;&gt;00755&lt;/span&gt;
+    &lt;span class=&quot;l-Scalar-Plain&quot;&gt;owner&lt;/span&gt;&lt;span class=&quot;p-Indicator&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;l-Scalar-Plain&quot;&gt;root&lt;/span&gt;
+    &lt;span class=&quot;l-Scalar-Plain&quot;&gt;group&lt;/span&gt;&lt;span class=&quot;p-Indicator&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;l-Scalar-Plain&quot;&gt;root&lt;/span&gt;
+    &lt;span class=&quot;l-Scalar-Plain&quot;&gt;source&lt;/span&gt;&lt;span class=&quot;p-Indicator&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;l-Scalar-Plain&quot;&gt;http://s3.amazonaws.com/mybucket/bootstrap.sh&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;The cached files were previously moved to &lt;code&gt;/var/app/support&lt;/code&gt;. The
+bootstrap script will create symbolic links to the directory being
+deployed.&lt;/p&gt;
+
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot;&gt;&lt;span class=&quot;c&quot;&gt;# /opt/elasticbeanstalk/hooks/appdeploy/pre/01a_bootstrap.sh&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;#!/usr/bin/env bash&lt;/span&gt;
+
+mkdir /var/app/ondeck/vendor /var/app/ondeck/public /var/app/support/bundle /var/app/support/assets
+
+ln -s /var/app/support/bundle /var/app/ondeck/vendor
+ln -s /var/app/support/assets /var/app/ondeck/public&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;Ultimately, we could drop the deployment time near to &lt;strong&gt;1 minute and 4
+seconds&lt;/strong&gt;—the time to download the packages is not counted here, but
+since it is in S3 in the same region, it takes no longer than 3 seconds
+to get 30MB. This is the kind of slowness I can withstand.&lt;/p&gt;
+
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code&gt;$ ls -1 /tmp
+01:49:05.696544004.01_unzip.sh
+01:49:06.029004848.01a_bootstrap.sh
+01:49:06.055676774.02_setup_envvars.sh
+01:49:06.120822495.10_bundle_install.sh
+01:49:07.156151174.11_asset_compilation.sh
+01:50:07.243165374.12_db_migration.sh
+01:50:08.454668833.01_flip.sh
+01:50:09.648283462.09clean.sh
+01:50:09.889387126.99_reload_app_server.sh
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h3 id=&quot;cleaning-up-and-updating-the-cache&quot;&gt;Cleaning up and updating the cache&lt;/h3&gt;
+
+&lt;p&gt;Given the deployment is no more an issue, we need to make sure our
+cached files correspond to the latest version of our application. We
+can use a &lt;code&gt;post&lt;/code&gt; hook to execute another script to update the cache.&lt;/p&gt;
+
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-yaml&quot;&gt;&lt;span class=&quot;l-Scalar-Plain&quot;&gt;files&lt;/span&gt;&lt;span class=&quot;p-Indicator&quot;&gt;:&lt;/span&gt;
+  &lt;span class=&quot;l-Scalar-Plain&quot;&gt;/opt/elasticbeanstalk/hooks/appdeploy/post/01_update_cache.sh&lt;/span&gt;&lt;span class=&quot;p-Indicator&quot;&gt;:&lt;/span&gt;
+    &lt;span class=&quot;l-Scalar-Plain&quot;&gt;mode&lt;/span&gt;&lt;span class=&quot;p-Indicator&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;l-Scalar-Plain&quot;&gt;00755&lt;/span&gt;
+    &lt;span class=&quot;l-Scalar-Plain&quot;&gt;owner&lt;/span&gt;&lt;span class=&quot;p-Indicator&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;l-Scalar-Plain&quot;&gt;root&lt;/span&gt;
+    &lt;span class=&quot;l-Scalar-Plain&quot;&gt;group&lt;/span&gt;&lt;span class=&quot;p-Indicator&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;l-Scalar-Plain&quot;&gt;root&lt;/span&gt;
+    &lt;span class=&quot;l-Scalar-Plain&quot;&gt;source&lt;/span&gt;&lt;span class=&quot;p-Indicator&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;l-Scalar-Plain&quot;&gt;http://s3.amazonaws.com/mybucket/update_cache.sh&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-sh&quot;&gt;&lt;span class=&quot;c&quot;&gt;# /opt/elasticbeanstalk/hooks/appdeploy/post/01_update_cache.sh&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;#!/usr/bin/env bash&lt;/span&gt;
+
+. /opt/elasticbeanstalk/support/envvars
+
+&lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&amp;quot;$RAILS_ENV&amp;quot;&lt;/span&gt; !&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&amp;quot;staging&amp;quot;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;then&lt;/span&gt;
+  &lt;span class=&quot;nb&quot;&gt;exit&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;fi&lt;/span&gt;
+
+&lt;span class=&quot;nb&quot;&gt;cd&lt;/span&gt; /var/app/support
+
+tar zcf bundle.tar.gz bundle
+s3put -b mybucket -p /var/app/support -g public-read bundle.tar.gz
+
+tar zcf assets.tar.gz assets
+s3put -b mybucket -p /var/app/support -g public-read assets.tar.gz&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;Thanks to staging-production parity, we can safely use our
+staging server to keep the cache updated, and leave the production
+server exclusively to our application.&lt;/p&gt;
+
+&lt;p&gt;We send the cache packages to our S3 bucket, so it will be available to
+any new EC2 instance EB starts. The only thing left is to configure
+the EC2 to download and unpack those packages. We can easily accomplish
+this using the &lt;code&gt;sources&lt;/code&gt; key.&lt;/p&gt;
+
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-yaml&quot;&gt;&lt;span class=&quot;l-Scalar-Plain&quot;&gt;sources&lt;/span&gt;&lt;span class=&quot;p-Indicator&quot;&gt;:&lt;/span&gt;
+  &lt;span class=&quot;l-Scalar-Plain&quot;&gt;/var/app/support&lt;/span&gt;&lt;span class=&quot;p-Indicator&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;l-Scalar-Plain&quot;&gt;http://s3.amazonaws.com/mybucket/bundle.tar.gz&lt;/span&gt;
+  &lt;span class=&quot;l-Scalar-Plain&quot;&gt;/var/app/support&lt;/span&gt;&lt;span class=&quot;p-Indicator&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;l-Scalar-Plain&quot;&gt;http://s3.amazonaws.com/mybucket/assets.tar.gz&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;We have made great changes to our deploy time. Nevertheless, there is
+room for improvements. For example, the &lt;code&gt;update_cache.sh&lt;/code&gt; script could
+check for changes in the cached packages and upload a new version only
+when necessary.&lt;/p&gt;
+
+&lt;h3 id=&quot;update-apr-09&quot;&gt;Update Apr, 09&lt;/h3&gt;
+
+&lt;p&gt;I had some issues with the asset compilation. The problem is that the
+script
+&lt;code&gt;/opt/elasticbeanstalk/hooks/appdeploy/pre/11_asset_compilation.sh&lt;/code&gt;
+executes &lt;code&gt;rake&lt;/code&gt; directly, therefore it was not using the bundled gems.
+I set my bootstrap script to change it to &lt;code&gt;bundle exec rake&lt;/code&gt;.&lt;/p&gt;
+
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-console&quot;&gt;&lt;span class=&quot;gp&quot;&gt;$&lt;/span&gt; sed -i &lt;span class=&quot;s1&quot;&gt;&amp;#39;s/&amp;quot;rake/&amp;quot;bundle exec rake/&amp;#39;&lt;/span&gt; /opt/elasticbeanstalk/hooks/appdeploy/pre/11_asset_compilation.sh&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;Another issue happened with passenger and git backed libraries.
+Thanks to &lt;a href=&quot;http://stackoverflow.com/a/13657473&quot;&gt;these&lt;/a&gt;
+&lt;a href=&quot;http://stackoverflow.com/a/13656775&quot;&gt;answers&lt;/a&gt;, I was able to fix the
+problem injecting another script right after &lt;code&gt;10_bundle_install.sh&lt;/code&gt; to
+pack all the gems.&lt;/p&gt;
+
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-yaml&quot;&gt;&lt;span class=&quot;l-Scalar-Plain&quot;&gt;files&lt;/span&gt;&lt;span class=&quot;p-Indicator&quot;&gt;:&lt;/span&gt;
+  &lt;span class=&quot;l-Scalar-Plain&quot;&gt;/opt/elasticbeanstalk/hooks/appdeploy/pre/10a_bundle_pack.sh&lt;/span&gt;&lt;span class=&quot;p-Indicator&quot;&gt;:&lt;/span&gt;
+    &lt;span class=&quot;l-Scalar-Plain&quot;&gt;mode&lt;/span&gt;&lt;span class=&quot;p-Indicator&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;00755&amp;quot;&lt;/span&gt;
+    &lt;span class=&quot;l-Scalar-Plain&quot;&gt;owner&lt;/span&gt;&lt;span class=&quot;p-Indicator&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;l-Scalar-Plain&quot;&gt;root&lt;/span&gt;
+    &lt;span class=&quot;l-Scalar-Plain&quot;&gt;group&lt;/span&gt;&lt;span class=&quot;p-Indicator&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;l-Scalar-Plain&quot;&gt;root&lt;/span&gt;
+    &lt;span class=&quot;l-Scalar-Plain&quot;&gt;source&lt;/span&gt;&lt;span class=&quot;p-Indicator&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;l-Scalar-Plain&quot;&gt;https://s3.amazonaws.com/mybucket/bundle_pack.sh&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-sh&quot;&gt;&lt;span class=&quot;c&quot;&gt;# /opt/elasticbeanstalk/hooks/appdeploy/pre/10a_bundle_pack.sh&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;#!/usr/bin/env bash&lt;/span&gt;
+
+. /opt/elasticbeanstalk/support/envvars
+
+&lt;span class=&quot;nb&quot;&gt;cd&lt;/span&gt; /var/app/ondeck
+
+bundle pack --all&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;I also added the &lt;code&gt;vendor/cache&lt;/code&gt; directory to the &lt;code&gt;bundle.tar.gz&lt;/code&gt; to
+avoid any delays in the deployment.&lt;/p&gt;
+
+&lt;p&gt;I have put all my configuration files and scripts in this &lt;a href=&quot;https://gist.github.com/wicz/5345688&quot;&gt;gist&lt;/a&gt;.&lt;/p&gt;
+
+</content>
+ </entry>
+ 
+ <entry>
+   <title>Ruby way to multiple inheritance</title>
+   <link href="http://horewi.cz/ruby-way-to-multiple-inheritance.html"/>
+   <updated>2013-03-29T00:00:00+01:00</updated>
+   <id>http://horewi.cz/ruby-way-to-multiple-inheritance</id>
+   <content type="html">&lt;p&gt;Ruby achieves multiple inheritance by mixing modules inside other
+classes. That is the reason modules used this way are called
+“mixins”.&lt;/p&gt;
+
+&lt;p&gt;Mixins are great to share common code among unrelated classes. It
+augments objects behavior while reducing code duplication.&lt;/p&gt;
+
+&lt;p&gt;Another great aspect about mixins is that its benefits comes with a
+little effort to implement. It is based on a thin contract with the
+object it is mixed into, which leads to very loosed coupling. For
+example, to mix Comparable or Enumerable, all it needs is the host
+object to implement the methods &lt;code&gt;&amp;lt;=&amp;gt;&lt;/code&gt; or &lt;code&gt;each&lt;/code&gt;, respectively.&lt;/p&gt;
+
+&lt;p&gt;There are details, however, the developer needs to be aware. When
+including a mixin, Ruby inserts the module into the class’ ancestors
+list, as sort of a pseudo superclass. This may make the method lookup
+path to become unwieldy and manifest performance issues.&lt;/p&gt;
+
+&lt;p&gt;Using mixins wildly may result on “method stuffing”. The amount of
+inherited methods not related to the problem domain may increase
+significantly, ending in bloated contracts. Ruby’s Enumerable, for
+instance, adds more than 40 public methods to the host object’s interface.&lt;/p&gt;
+
+&lt;p&gt;There is a risk of name clashing, especially with instance variables of
+the host class or other mixins. If the mixin needs its own state, make
+sure the instance variables have unique names, e.g. use the module
+name as a prefix. The same problem can happen with methods, leading to
+unexpected results.&lt;/p&gt;
+
+&lt;p&gt;Even though the relationship between the module and host class is looser,
+it is still sort of a &lt;em&gt;is-a&lt;/em&gt; association. It even returns &lt;code&gt;true&lt;/code&gt; to the
+&lt;code&gt;is_a?(ModuleName)&lt;/code&gt; method call. Being an inheritance, its use should be
+carefully compared against composition.&lt;/p&gt;
+
+&lt;p&gt;Developers should notice that mixins must be used to share common code,
+and &lt;strong&gt;not&lt;/strong&gt; as “functions bags”. When used as the latter—to reduce lines
+of code, make classes look slim, and whatnot—it gives a false sense of
+organization and makes reading code much harder. The key is to create
+mixins based on &lt;em&gt;semantics&lt;/em&gt;, not on &lt;em&gt;syntatics&lt;/em&gt;.&lt;/p&gt;
+
+&lt;p&gt;Module-to-module dependency is a design smell. It often hints a missing
+class, e.g. service, begging to be created. Mixins should also be
+orthogonal, just like the other classes in the system.&lt;/p&gt;
+
+&lt;p&gt;Mixins are a convenient solution for many cases, but it requires a lot
+of discipline to use effectively. Just as another tool in your toolbox,
+use it wisely and with the right purpose.&lt;/p&gt;
+
+</content>
+ </entry>
+ 
+ <entry>
+   <title>On becoming a better writer</title>
+   <link href="http://horewi.cz/on-becoming-a-better-writer.html"/>
+   <updated>2013-03-24T00:00:00+01:00</updated>
+   <id>http://horewi.cz/on-becoming-a-better-writer</id>
+   <content type="html">&lt;p&gt;Writing is easy, the challenge is to make other people understand what
+you say.&lt;/p&gt;
+
+&lt;p&gt;As the writer, you are responsible of reviewing your work. Documents
+without format standards are unacceptable. Errors in spelling or
+punctuation should be reduced to none. Communication is hard already,
+you do not need other things to make it more difficult.&lt;/p&gt;
+
+&lt;p&gt;I have found some great advices to improve my writing skills. Everyone
+who is writing should follow them as well. Applying those may not turn
+you into a best-selling author, but it is, at least, a sign of respect
+for your reader.&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;a href=&quot;http://whatever.scalzi.com/2006/02/12/writing-tips-for-non-writers-who-dont-want-to-work-at-writing&quot;&gt;Writing Tips for Non-Writers Who Don’t Want to Work at Writing&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://www.readability.com/articles/nbo4nw5r&quot;&gt;Hints for revising&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://www.readability.com/articles/viugvqgs&quot;&gt;Technical Writing
+Tips&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;http://www.gutenberg.org/files/37134/37134-h/37134-h.htm&quot;&gt;The Elements of Style&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;http://amzn.com/0205830765&quot;&gt;Style: The Basics of Clarity and Grace&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+</content>
+ </entry>
+ 
+ <entry>
+   <title>My GitHub workflow</title>
+   <link href="http://horewi.cz/my-github-workflow.html"/>
+   <updated>2013-03-16T00:00:00+01:00</updated>
+   <id>http://horewi.cz/my-github-workflow</id>
+   <content type="html">&lt;p&gt;There is plenty of git and github workflows, models and tips all over
+the web&lt;sup id=&quot;fnref:1&quot;&gt;&lt;a href=&quot;#fn:1&quot; class=&quot;footnote&quot;&gt;1&lt;/a&gt;&lt;/sup&gt;. I have evaluated a bunch of them, and came up with this
+guidelines.&lt;/p&gt;
+
+&lt;p&gt;I am following it on a daily basis and it is working great so far, thus
+I think it is worth sharing.&lt;/p&gt;
+
+&lt;h4 id=&quot;update-your-local-master&quot;&gt;1. Update your local master&lt;/h4&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-console&quot;&gt;&lt;span class=&quot;gp&quot;&gt;$&lt;/span&gt; git checkout master
+&lt;span class=&quot;go&quot;&gt;[master]$ git pull&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;I keep the &lt;code&gt;master&lt;/code&gt; a production-ready branch. It is always green on my
+CI and it is the starting point for all feature branches.&lt;/p&gt;
+
+&lt;p&gt;I never (ok, &lt;em&gt;rarely&lt;/em&gt;) commit changes directly into it. Only merge from
+other branches. This helps keeping its history clean and eases reverting
+or rolling back features.&lt;/p&gt;
+
+&lt;h4 id=&quot;create-a-feature-branch&quot;&gt;2. Create a feature branch&lt;/h4&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-console&quot;&gt;&lt;span class=&quot;gp&quot;&gt;$&lt;/span&gt; git checkout -b brach-name&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;Define a convetion to name your branches. Having name initials and
+feature name helps to know what the branch is about and who is
+in charge of it.&lt;/p&gt;
+
+&lt;p&gt;Sum up the feature name to a single verb and noun sentence. This is
+enough to pass the idea of what is being done without cluttering.&lt;/p&gt;
+
+&lt;p&gt;It is also good to add ticket/story id. This lets you go straight to
+the related issue in your management tool.&lt;/p&gt;
+
+&lt;p&gt;You end up with a branch name like: &lt;code&gt;vh-1337-add-profile-phone&lt;/code&gt;&lt;/p&gt;
+
+&lt;h4 id=&quot;create-short-commits-early-and-often&quot;&gt;3. Create short commits, early and often&lt;/h4&gt;
+&lt;p&gt;Now you can craft your spell in safety without disturbing anyone.&lt;/p&gt;
+
+&lt;p&gt;Commits should have as little files as possible. Group them logically.
+Add the minimum files needed to get the job done. Even if it is a
+one-file commit. You will thank yourself when you need to cherry pick in
+the future.&lt;/p&gt;
+
+&lt;p&gt;Commit early and often. As soon as you commit your changes, easier it
+will be to create short commits.&lt;/p&gt;
+
+&lt;p&gt;Elaborate well formed commit messages&lt;sup id=&quot;fnref:2&quot;&gt;&lt;a href=&quot;#fn:2&quot; class=&quot;footnote&quot;&gt;2&lt;/a&gt;&lt;/sup&gt;. It helps convey your
+work. If you are facing difficulty to explain your changes, you are
+likely trying to commit too much. Split it into two or more commits.&lt;/p&gt;
+
+&lt;p&gt;Sometimes we commits changes that do not create real value, e.g.
+remove white spaces, fix line endings. Sometimes we write crappy
+commit messages. There is no problem on doing it, as long as you fix it
+later.&lt;/p&gt;
+
+&lt;p&gt;Learn to use &lt;code&gt;git add --patch&lt;/code&gt; option.&lt;/p&gt;
+
+&lt;h4 id=&quot;keep-your-branch-updated&quot;&gt;4. Keep your branch updated&lt;/h4&gt;
+&lt;p&gt;It is a good idea to get changes from &lt;code&gt;master&lt;/code&gt; sometimes to check that
+your actual work is still compatible and to get the latest updates.&lt;/p&gt;
+
+&lt;p&gt;Prefer merge over rebase&lt;sup id=&quot;fnref:3&quot;&gt;&lt;a href=&quot;#fn:3&quot; class=&quot;footnote&quot;&gt;3&lt;/a&gt;&lt;/sup&gt;. It avoids history rewriting and it is
+easier to fix conflicts.&lt;/p&gt;
+
+&lt;h4 id=&quot;when-done-publish-it-to-stagingqa&quot;&gt;5. When done, publish it to staging/QA&lt;/h4&gt;
+&lt;p&gt;Set a &lt;code&gt;staging&lt;/code&gt; branch to merge your feature branches in. This allows
+you to have multiple features branches tested at the same time at the
+same staging server.&lt;/p&gt;
+
+&lt;p&gt;I would not mind messing with the history in the &lt;code&gt;staging&lt;/code&gt; branch, thus
+merging in the feature branch—with its non-useful or crappy
+commits—will do.&lt;/p&gt;
+
+&lt;p&gt;Just merge with non-fast forward to keep commits grouped together.&lt;/p&gt;
+
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-console&quot;&gt;&lt;span class=&quot;go&quot;&gt;[branch-name]$ git checkout staging&lt;/span&gt;
+&lt;span class=&quot;go&quot;&gt;[staging]$ git pull&lt;/span&gt;
+&lt;span class=&quot;go&quot;&gt;[staging]$ git merge --no-ff branch-name&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;Fix conflicts and any failing tests and you are ready to go.&lt;/p&gt;
+
+&lt;h4 id=&quot;squash-commits-open-pull-request-and-ask-for-code-review&quot;&gt;6. Squash commits, open pull request and ask for code review&lt;/h4&gt;
+&lt;p&gt;Now that your feature passed the QA tests you can move on.&lt;/p&gt;
+
+&lt;p&gt;Remember the crappy commit messages? Now it is time to fix that.
+Interactive rebase your feature branch with &lt;code&gt;master&lt;/code&gt;, squash and rewrite
+where you see fit.&lt;/p&gt;
+
+&lt;p&gt;Try to limit it to only one commit. It will be easier if you need to
+rollback the feature in the future and keeps your &lt;code&gt;master&lt;/code&gt; history
+clean.&lt;/p&gt;
+
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-console&quot;&gt;&lt;span class=&quot;go&quot;&gt;[branch-name]$ git fetch&lt;/span&gt;
+&lt;span class=&quot;go&quot;&gt;[branch-name]$ git rebase -i origin/master&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;Open a pull request. I suggest using hub&lt;sup id=&quot;fnref:4&quot;&gt;&lt;a href=&quot;#fn:4&quot; class=&quot;footnote&quot;&gt;4&lt;/a&gt;&lt;/sup&gt; so you do not
+break your workflow leaving the terminal to use the web interface.&lt;/p&gt;
+
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-console&quot;&gt;&lt;span class=&quot;go&quot;&gt;[branch-name]$ hub pull-request&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;Add to the pull request smart commit messages&lt;sup id=&quot;fnref:5&quot;&gt;&lt;a href=&quot;#fn:5&quot; class=&quot;footnote&quot;&gt;5&lt;/a&gt;&lt;/sup&gt; and links to your
+story in the management tool. For example:&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;Add field telephone to user profile fixes #1337&lt;/p&gt;
+
+  &lt;p&gt;Telephone is a required field. Validation is done in the model,
+form text field masked via javascript as (00) 0000-0000.&lt;/p&gt;
+
+  &lt;p&gt;ref.: https://www.pivotaltracker.com/story/show/1337&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;Ask your team to review your code and share their
+impressions commenting right on it&lt;sup id=&quot;fnref:6&quot;&gt;&lt;a href=&quot;#fn:6&quot; class=&quot;footnote&quot;&gt;6&lt;/a&gt;&lt;/sup&gt;. After refactorings and
+corrections you can merge the pull request.&lt;/p&gt;
+
+&lt;h4 id=&quot;cleaning-up&quot;&gt;7. Cleaning up&lt;/h4&gt;
+&lt;p&gt;With your pull request merged, you can safely delete your feature
+branch. GitHub has made it very straightforward&lt;sup id=&quot;fnref:7&quot;&gt;&lt;a href=&quot;#fn:7&quot; class=&quot;footnote&quot;&gt;7&lt;/a&gt;&lt;/sup&gt;. Although, it is
+important to know how to do it on your own:&lt;/p&gt;
+
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-console&quot;&gt;&lt;span class=&quot;go&quot;&gt;[master]$ git push origin :branch-name&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;Delete it locally as well.&lt;/p&gt;
+
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-console&quot;&gt;&lt;span class=&quot;go&quot;&gt;[master]$ git branch -d branch-name&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;Clear stale remote-tracking branches removed by someone else (or via GitHub):&lt;/p&gt;
+
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-console&quot;&gt;&lt;span class=&quot;go&quot;&gt;[master]$ git remote prune origin&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;That’s it! The post ended bigger than expected, and I apologize for
+that. I hope you enjoy and I am looking forward to your opinions in
+the comments below.&lt;/p&gt;
+
+&lt;div class=&quot;footnotes&quot;&gt;
+  &lt;ol&gt;
+    &lt;li id=&quot;fn:1&quot;&gt;
+
+      &lt;ul&gt;
+        &lt;li&gt;&lt;a href=&quot;http://robots.thoughtbot.com/post/29355216290/git-landscaping&quot;&gt;Git Landscaping&lt;/a&gt;&lt;/li&gt;
+        &lt;li&gt;&lt;a href=&quot;http://robots.thoughtbot.com/post/21306813001/remote-branch&quot;&gt;Remote Branch&lt;/a&gt;&lt;/li&gt;
+        &lt;li&gt;&lt;a href=&quot;http://robots.thoughtbot.com/post/2831837714/feature-branch-code-reviews&quot;&gt;Feature branch code reviews&lt;/a&gt;&lt;/li&gt;
+        &lt;li&gt;&lt;a href=&quot;http://nvie.com/posts/a-successful-git-branching-model&quot;&gt;A successful Git branching model&lt;/a&gt;&lt;/li&gt;
+        &lt;li&gt;&lt;a href=&quot;http://reinh.com/blog/2009/03/02/a-git-workflow-for-agile-teams.html&quot;&gt;A Git Workflow for Agile Teams&lt;/a&gt;&lt;/li&gt;
+        &lt;li&gt;&lt;a href=&quot;http://git-scm.com/book/ch3-4.html&quot;&gt;Git Branching - Branching Workflows&lt;/a&gt;&lt;/li&gt;
+        &lt;li&gt;&lt;a href=&quot;http://blog.hasmanythrough.com/2008/12/18/agile-git-and-the-story-branch-pattern&quot;&gt;Agile git and the story branch pattern&lt;/a&gt;&lt;/li&gt;
+      &lt;/ul&gt;
+      &lt;p&gt;&lt;a href=&quot;#fnref:1&quot; class=&quot;reversefootnote&quot;&gt;&amp;#8617;&lt;/a&gt;&lt;/p&gt;
+    &lt;/li&gt;
+    &lt;li id=&quot;fn:2&quot;&gt;
+      &lt;p&gt;&lt;a href=&quot;http://tbaggery.com/2008/04/19/a-note-about-git-commit-messages.html&quot;&gt;A Note About Git Commit Messages&lt;/a&gt; &lt;a href=&quot;#fnref:2&quot; class=&quot;reversefootnote&quot;&gt;&amp;#8617;&lt;/a&gt;&lt;/p&gt;
+    &lt;/li&gt;
+    &lt;li id=&quot;fn:3&quot;&gt;
+      &lt;p&gt;&lt;a href=&quot;http://mislav.uniqpath.com/2013/02/merge-vs-rebase&quot;&gt;Git merge vs. rebase&lt;/a&gt; &lt;a href=&quot;#fnref:3&quot; class=&quot;reversefootnote&quot;&gt;&amp;#8617;&lt;/a&gt;&lt;/p&gt;
+    &lt;/li&gt;
+    &lt;li id=&quot;fn:4&quot;&gt;
+      &lt;p&gt;&lt;a href=&quot;http://defunkt.io/hub/&quot;&gt;hub: the command-line wrapper for git&lt;/a&gt; &lt;a href=&quot;#fnref:4&quot; class=&quot;reversefootnote&quot;&gt;&amp;#8617;&lt;/a&gt;&lt;/p&gt;
+    &lt;/li&gt;
+    &lt;li id=&quot;fn:5&quot;&gt;
+
+      &lt;ul&gt;
+        &lt;li&gt;&lt;a href=&quot;https://github.com/blog/831-issues-2-0-the-next-generation&quot;&gt;Issues 2.0: The Next Generation&lt;/a&gt;&lt;/li&gt;
+        &lt;li&gt;&lt;a href=&quot;https://github.com/blog/1386-closing-issues-via-commit-messages&quot;&gt;Closing Issues via Commit
+Messages&lt;/a&gt;&lt;/li&gt;
+      &lt;/ul&gt;
+      &lt;p&gt;&lt;a href=&quot;#fnref:5&quot; class=&quot;reversefootnote&quot;&gt;&amp;#8617;&lt;/a&gt;&lt;/p&gt;
+    &lt;/li&gt;
+    &lt;li id=&quot;fn:6&quot;&gt;
+      &lt;p&gt;&lt;a href=&quot;https://github.com/blog/622-inline-commit-notes&quot;&gt;Inline commit notes&lt;/a&gt; &lt;a href=&quot;#fnref:6&quot; class=&quot;reversefootnote&quot;&gt;&amp;#8617;&lt;/a&gt;&lt;/p&gt;
+    &lt;/li&gt;
+    &lt;li id=&quot;fn:7&quot;&gt;
+      &lt;p&gt;&lt;a href=&quot;https://github.com/blog/1335-tidying-up-after-pull-requests&quot;&gt;Tidying up after Pull Requests&lt;/a&gt; &lt;a href=&quot;#fnref:7&quot; class=&quot;reversefootnote&quot;&gt;&amp;#8617;&lt;/a&gt;&lt;/p&gt;
+    &lt;/li&gt;
+  &lt;/ol&gt;
+&lt;/div&gt;
+</content>
+ </entry>
+ 
+ <entry>
+   <title>Tips for a better remote experience</title>
+   <link href="http://horewi.cz/tips-for-a-better-remote-experience.html"/>
+   <updated>2013-03-12T00:00:00+01:00</updated>
+   <id>http://horewi.cz/tips-for-a-better-remote-experience</id>
+   <content type="html">&lt;p&gt;I’ve been working remotely for a while now. It’s been a great
+experience and a lot of lessons learned so, I’d like to share some
+thoughts on best practices and good manners.&lt;/p&gt;
+
+&lt;h4 id=&quot;have-a-toolbox-to-help-you-communicate&quot;&gt;Have a toolbox to help you communicate&lt;/h4&gt;
+
+&lt;p&gt;Emails, IMs and group chats are good for near realtime
+conversations, but they do a lousy job on documentation and requirements
+specifications. Bring other tools like Basecamp or Pivotal Tracker into
+your workflow. But make sure it’s being productive . These
+tools are supposed to help you, if they’re not worth or being underused,
+you should look for alternatives.&lt;/p&gt;
+
+&lt;h4 id=&quot;be-accessible-and-responsive&quot;&gt;Be accessible and responsive&lt;/h4&gt;
+
+&lt;p&gt;Try not let people waiting forever until they can get an answer. And in
+case you’re really busy, a “just a sec” is much better than the sound of
+crickets chirping.&lt;/p&gt;
+
+&lt;h4 id=&quot;be-patient&quot;&gt;Be patient&lt;/h4&gt;
+
+&lt;p&gt;Even the most accessible and responsive person can be in a hurry
+sometimes, so avoid calling insistently. Waiting a few seconds won’t hurt,
+will it?&lt;/p&gt;
+
+&lt;h4 id=&quot;communicate-often&quot;&gt;Communicate often&lt;/h4&gt;
+
+&lt;p&gt;Let people know what you’re doing. If won’t be available for a couple of
+minutes, a “brb” should be enough. If you’re helping someone, make them
+aware of it. Helping people in silence may cause rework because you
+don’t know if there aren’t others doing exactly the same thing.&lt;/p&gt;
+
+&lt;h4 id=&quot;be-as-clear-and-brief-as-possible&quot;&gt;Be as clear and brief as possible&lt;/h4&gt;
+
+&lt;p&gt;Specialy in text group chats. And don’t write&lt;/p&gt;
+
+&lt;p&gt;like that&lt;/p&gt;
+
+&lt;p&gt;it pisses people off and&lt;/p&gt;
+
+&lt;p&gt;is hard to follow!&lt;/p&gt;
+
+&lt;p&gt;Put your ideas together in one sentence, respect the punctuation and
+double-check for spelling errors.&lt;/p&gt;
+
+&lt;h4 id=&quot;be-professional&quot;&gt;Be professional&lt;/h4&gt;
+
+&lt;p&gt;Just because you can &lt;code&gt;/play&lt;/code&gt; or &lt;code&gt;hubot meme&lt;/code&gt; in Campfire, it doesn’t mean
+that you should do it all the time. Emoji are fun, but use it if care,
+ok? :wink:&lt;/p&gt;
+
+&lt;h4 id=&quot;watch-out-for-interruptions&quot;&gt;Watch out for interruptions&lt;/h4&gt;
+
+&lt;p&gt;Try to find a balance between your tasks and talking to other people. Set
+your notifications to be unobtrusive to avoid losing focus. I personally
+disable sound notifications and set my chat client to alert me only when my
+name shows up on conversations.&lt;/p&gt;
+
+&lt;p&gt;If you have any other tips, please share them in the comments below. I’d love
+to learn new stuff to make my working day more productive.&lt;/p&gt;
+
+</content>
+ </entry>
+ 
+ <entry>
+   <title>My TODO list</title>
+   <link href="http://horewi.cz/my-todo-list.html"/>
+   <updated>2011-12-17T00:00:00+01:00</updated>
+   <id>http://horewi.cz/my-todo-list</id>
+   <content type="html">&lt;p&gt;A &lt;a href=&quot;http://about.me/victorhg&quot;&gt;friend&lt;/a&gt;
+&lt;a href=&quot;https://twitter.com/victorhg/status/142079139220946944&quot;&gt;tweeted&lt;/a&gt;:&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;I use pending specs instead of TODO lists… nice tip from @wicz… it
+gives me an interesting view of what is missing.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;I told Victor to write pending specs in place of using TODO comments
+within his code. I’m glad he liked the idea. I’ve been using the pending
+specs technique for a while and I’d like to share my thoughts why you
+should do the same.&lt;/p&gt;
+
+&lt;p&gt;First, &lt;strong&gt;you shouldn’t add comments unless they are extremely
+necessary.&lt;/strong&gt; As good developers, we strive to write clean, concise and
+self-explanatory code. We always refactor our code to make it as clear
+as possible for others to understand and to avoid to use of unnecessary
+comments. Using TODO comments go against our principles.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;TODO comments are easily forgotten and overlooked. And your tests are
+not!&lt;/strong&gt; How often do you &lt;code&gt;ack TODO&lt;/code&gt;? And how often you run your test
+suite? I bet you’ve answered &lt;em&gt;sometimes&lt;/em&gt; and &lt;em&gt;everytime&lt;/em&gt;. And how about
+your CI server? I’m not sure if it knows anything about TODO comments,
+but it can certainly cope with pending tests.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;TODO comments are just wrong!&lt;/strong&gt; Specially if you’re using them to
+convey something your code should be doing. What your code needs to do
+is its specification, and we all know the right place to put it.&lt;/p&gt;
+
+&lt;p&gt;So, are you still using TODO comments? I’d love to hear your opinions on
+the comments below.&lt;/p&gt;
+
+</content>
+ </entry>
+ 
+</feed>
+

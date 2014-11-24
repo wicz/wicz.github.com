@@ -1,0 +1,115 @@
+body {
+  background: #fff;
+  color: #333;
+  font-family: "Roboto Slab", Cambria, Georgia, Times, serif;
+  padding: 0;
+  position: relative;
+  width: 100%;
+}
+footer,
+header {
+  font-family: "Roboto Slab", Cambria, Georgia, Times, serif;
+  font-size: 1em;
+  text-align: center;
+}
+footer {
+  margin: 2em auto;
+  letter-spacing: .25em;
+}
+header {
+  margin-bottom: 2em;
+}
+body div.container {
+  margin: 0 auto;
+  position: relative;
+  width: 750px;
+}
+section.post-content header,
+section.blog-posts article {
+  border-bottom: 1px solid #ddd;
+}
+section.blog-posts article h3 {
+  font-size: 1.4em;
+  font-weight: 300;
+}
+section.blog-posts article time {
+  float: right;
+  display: inline-block;
+  text-transform: uppercase;
+}
+section.post-content header {
+  margin-bottom: 2em;
+  padding-bottom: 1em;
+}
+section.post-content header time {
+  font-size: .9em;
+  color: #666;
+}
+section.post-content article {
+  font-family: "Roboto", Helvetica, Arial, sans-serif;
+  font-size: 1.4em;
+  margin-bottom: 2em;
+  font-weight: 300;
+}
+a,
+a:visited,
+a:active,
+a {
+  color: #069;
+  text-decoration: none;
+}
+a:hover {
+  color: #06f;
+}
+strong, dt {
+  font-weight: 400;
+}
+p > code {
+  background: #eee;
+  padding:2px 4px;
+  font-family: "Ubuntu Mono", monospace, serif;
+  font-size: 0.8em;
+}
+.footnotes {
+  font-size: .8em;
+}
+pre {
+  white-space: pre;
+  word-wrap: normal;
+  overflow-x: scroll;
+}
+pre code {
+  width: 98%;
+  font-family: "Ubuntu Mono", monospace, serif;
+  font-size: 0.8em;
+}
+blockquote {
+  color: #999;
+  border-left: 4px solid #ccc;
+  padding-left: 40px;
+  margin-left: 0;
+  font-style: italic;
+}
+#about-photo {
+  float: left;
+  margin-right: 1.25em;
+  margin-bottom: .5em;
+  border: 1px solid #ccc;
+  -moz-box-shadow:0px 2px 15px rgba(0,0,0,.5);
+  -webkit-box-shadow:0px 2px 15px rgba(0,0,0,.5);
+  box-shadow: 0px 2px 15px rgba(0,0,0,.5);
+}
+.fa-tw1tter:before {
+  content: "\f099";
+}
+.fa-l1nkedin:before {
+  content: "\f0e1";
+}
+.highlight pre {
+  margin: 10px;
+}
+img.center {
+  display: block;
+  margin: 0 auto;
+}
+

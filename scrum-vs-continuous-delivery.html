@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<!--[if lt IE 7]>      <html class="no-js lt-ie9 lt-ie8 lt-ie7"> <![endif]-->
+<!--[if IE 7]>         <html class="no-js lt-ie9 lt-ie8"> <![endif]-->
+<!--[if IE 8]>         <html class="no-js lt-ie9"> <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js"> <!--<![endif]-->
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+<title>Scrum vs Continuous Delivery &larr; Vinicius Horewicz</title>
+<meta name="viewport" content="width=device-width">
+<meta name="author" content="Vinicius Horewicz (wicz)">
+<meta name="description" content="wicz' personal notes">
+<link rel="alternate" type="application/atom+xml" href="/atom.xml" title="RSS feed" />
+<link rel="stylesheet" href="/assets/stylesheets/normalize.css">
+<link rel="stylesheet" href="/assets/stylesheets/monokai.css">
+<link rel="stylesheet" href="/assets/stylesheets/main.css">
+<link rel="stylesheet" href="/assets/stylesheets/screen.css">
+<link href="//netdna.bootstrapcdn.com/font-awesome/4.0.0/css/font-awesome.css" rel="stylesheet">
+<link href="//fonts.googleapis.com/css?family=Roboto:400,300,300italic|Roboto+Slab:300|Ubuntu+Mono" rel="stylesheet" type="text/css">
+<script src="/assets/javascripts/modernizr-2.6.2.min.js"></script>
+</head>
+<body>
+<div class="container">
+  <p><a href="/">&larr; index</a></p>
+
+<section class="post-content">
+  <header>
+    <h1>Scrum vs Continuous Delivery</h1>
+    <time datetime="2013-08-16T00:00:00+02:00" pubdate>16 August 2013</time>
+  </header>
+
+  <article>
+    <p>A while ago I had the displeasure of hearing from a Project Manager
+(PM):</p>
+
+<blockquote>
+  <p>“I don’t do Scrum, I do Continuous Delivery”</p>
+</blockquote>
+
+<p>All of a sudden there were no more sprint planning, review and
+retrospective meetings. Developers started working in a “production
+line”, solving bugs from the tracking system. Misery all over.</p>
+
+<p>His argument was that working with Continuous Delivery (CD) he would
+gain productivity releasing software faster. Clearly the PM
+misunderstood some important concepts. Let’s clear things up.</p>
+
+<p><a href="http://www.scrumguides.org/">Scrum</a> is an agile process based on
+time-boxed iterations <em>during which</em> usable and potentially releasable
+product increment is created; and the Product Owner may choose to
+<em>immediately release it</em>.</p>
+
+<p><a href="http://martinfowler.com/bliki/ContinuousDelivery.html">CD</a> is a
+discipline where you build software in a way it can be <em>released to
+production at any time</em>. It is about keeping the system in a
+production-ready state. It has nothing to do with releasing software
+earlier or making sprints shorter.</p>
+
+<p>Based on the definitions, it is clear that if you have software that is
+production-ready, you may choose to release it at any time, even during
+the iteration. <strong>The “release” is not related to the sprint review
+meeting.</strong></p>
+
+<p>Scrum and CD can perfectly work together. In fact, both should be used
+whenever it is possible. CD improves Scrum shortening the feedback loop,
+allowing quicker responses for changes, hence leading to a better
+product.</p>
+
+<p>If you can have the best of both worlds, why not do it so?</p>
+
+
+  </article>
+</section>
+
+<!-- Enable Disqus comments -->
+<div id="disqus_thread"></div>
+<script type="text/javascript">
+  var disqus_shortname = 'horewicz';
+  var disqus_identifier = '/scrum-vs-continuous-delivery';
+  var disqus_url = 'http://horewi.cz/scrum-vs-continuous-delivery.html';
+  (function() {
+    var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+    dsq.src = 'http://' + disqus_shortname + '.disqus.com/embed.js';
+    (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+  })();
+</script>
+
+
+
+  <footer>
+    <a href="about.html">
+  <i class="fa fa-info-circle fa-fw fa-lg"></i>
+</a>
+<a href="https://www.linkedin.com/in/viniciushorewicz">
+  <i class="fa fa-l1nkedin fa-fw fa-lg"></i>
+</a>
+<a href="https://github.com/wicz">
+  <i class="fa fa-github fa-fw fa-lg"></i>
+</a>
+<a href="https://twitter.com/wicz">
+  <i class="fa fa-tw1tter fa-fw fa-lg"></i>
+</a>
+<a href="https://stackoverflow.com/users/3243455/wicz">
+  <i class="fa fa-stack-overflow fa-fw fa-lg"></i>
+</a>
+<a href="/assets/wicz.pub.asc">
+  <i class="fa fa-lock fa-fw fa-lg"></i>
+</a>
+<a href="/atom.xml">
+  <i class="fa fa-rss fa-fw fa-lg"></i>
+</a>
+
+
+  </footer>
+</div>
+
+<script type="text/javascript">
+  var _gaq=[['_setAccount','UA-8480243-3'],['_trackPageview']];
+  (function(d,t){var g=d.createElement(t),s=d.getElementsByTagName(t)[0];
+   g.src=('https:'==location.protocol?'//ssl':'//www')+'.google-analytics.com/ga.js';
+   s.parentNode.insertBefore(g,s)}(document,'script'));
+</script>
+</body>
+</html>
+

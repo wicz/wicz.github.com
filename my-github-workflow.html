@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<!--[if lt IE 7]>      <html class="no-js lt-ie9 lt-ie8 lt-ie7"> <![endif]-->
+<!--[if IE 7]>         <html class="no-js lt-ie9 lt-ie8"> <![endif]-->
+<!--[if IE 8]>         <html class="no-js lt-ie9"> <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js"> <!--<![endif]-->
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+<title>My GitHub workflow &larr; Vinicius Horewicz</title>
+<meta name="viewport" content="width=device-width">
+<meta name="author" content="Vinicius Horewicz (wicz)">
+<meta name="description" content="wicz' personal notes">
+<link rel="alternate" type="application/atom+xml" href="/atom.xml" title="RSS feed" />
+<link rel="stylesheet" href="/assets/stylesheets/normalize.css">
+<link rel="stylesheet" href="/assets/stylesheets/monokai.css">
+<link rel="stylesheet" href="/assets/stylesheets/main.css">
+<link rel="stylesheet" href="/assets/stylesheets/screen.css">
+<link href="//netdna.bootstrapcdn.com/font-awesome/4.0.0/css/font-awesome.css" rel="stylesheet">
+<link href="//fonts.googleapis.com/css?family=Roboto:400,300,300italic|Roboto+Slab:300|Ubuntu+Mono" rel="stylesheet" type="text/css">
+<script src="/assets/javascripts/modernizr-2.6.2.min.js"></script>
+</head>
+<body>
+<div class="container">
+  <p><a href="/">&larr; index</a></p>
+
+<section class="post-content">
+  <header>
+    <h1>My GitHub workflow</h1>
+    <time datetime="2013-03-16T00:00:00+01:00" pubdate>16 March 2013</time>
+  </header>
+
+  <article>
+    <p>There is plenty of git and github workflows, models and tips all over
+the web<sup id="fnref:1"><a href="#fn:1" class="footnote">1</a></sup>. I have evaluated a bunch of them, and came up with this
+guidelines.</p>
+
+<p>I am following it on a daily basis and it is working great so far, thus
+I think it is worth sharing.</p>
+
+<h4 id="update-your-local-master">1. Update your local master</h4>
+<div class="highlight"><pre><code class="language-console"><span class="gp">$</span> git checkout master
+<span class="go">[master]$ git pull</span></code></pre></div>
+
+<p>I keep the <code>master</code> a production-ready branch. It is always green on my
+CI and it is the starting point for all feature branches.</p>
+
+<p>I never (ok, <em>rarely</em>) commit changes directly into it. Only merge from
+other branches. This helps keeping its history clean and eases reverting
+or rolling back features.</p>
+
+<h4 id="create-a-feature-branch">2. Create a feature branch</h4>
+<div class="highlight"><pre><code class="language-console"><span class="gp">$</span> git checkout -b brach-name</code></pre></div>
+
+<p>Define a convetion to name your branches. Having name initials and
+feature name helps to know what the branch is about and who is
+in charge of it.</p>
+
+<p>Sum up the feature name to a single verb and noun sentence. This is
+enough to pass the idea of what is being done without cluttering.</p>
+
+<p>It is also good to add ticket/story id. This lets you go straight to
+the related issue in your management tool.</p>
+
+<p>You end up with a branch name like: <code>vh-1337-add-profile-phone</code></p>
+
+<h4 id="create-short-commits-early-and-often">3. Create short commits, early and often</h4>
+<p>Now you can craft your spell in safety without disturbing anyone.</p>
+
+<p>Commits should have as little files as possible. Group them logically.
+Add the minimum files needed to get the job done. Even if it is a
+one-file commit. You will thank yourself when you need to cherry pick in
+the future.</p>
+
+<p>Commit early and often. As soon as you commit your changes, easier it
+will be to create short commits.</p>
+
+<p>Elaborate well formed commit messages<sup id="fnref:2"><a href="#fn:2" class="footnote">2</a></sup>. It helps convey your
+work. If you are facing difficulty to explain your changes, you are
+likely trying to commit too much. Split it into two or more commits.</p>
+
+<p>Sometimes we commits changes that do not create real value, e.g.
+remove white spaces, fix line endings. Sometimes we write crappy
+commit messages. There is no problem on doing it, as long as you fix it
+later.</p>
+
+<p>Learn to use <code>git add --patch</code> option.</p>
+
+<h4 id="keep-your-branch-updated">4. Keep your branch updated</h4>
+<p>It is a good idea to get changes from <code>master</code> sometimes to check that
+your actual work is still compatible and to get the latest updates.</p>
+
+<p>Prefer merge over rebase<sup id="fnref:3"><a href="#fn:3" class="footnote">3</a></sup>. It avoids history rewriting and it is
+easier to fix conflicts.</p>
+
+<h4 id="when-done-publish-it-to-stagingqa">5. When done, publish it to staging/QA</h4>
+<p>Set a <code>staging</code> branch to merge your feature branches in. This allows
+you to have multiple features branches tested at the same time at the
+same staging server.</p>
+
+<p>I would not mind messing with the history in the <code>staging</code> branch, thus
+merging in the feature branch—with its non-useful or crappy
+commits—will do.</p>
+
+<p>Just merge with non-fast forward to keep commits grouped together.</p>
+
+<div class="highlight"><pre><code class="language-console"><span class="go">[branch-name]$ git checkout staging</span>
+<span class="go">[staging]$ git pull</span>
+<span class="go">[staging]$ git merge --no-ff branch-name</span></code></pre></div>
+
+<p>Fix conflicts and any failing tests and you are ready to go.</p>
+
+<h4 id="squash-commits-open-pull-request-and-ask-for-code-review">6. Squash commits, open pull request and ask for code review</h4>
+<p>Now that your feature passed the QA tests you can move on.</p>
+
+<p>Remember the crappy commit messages? Now it is time to fix that.
+Interactive rebase your feature branch with <code>master</code>, squash and rewrite
+where you see fit.</p>
+
+<p>Try to limit it to only one commit. It will be easier if you need to
+rollback the feature in the future and keeps your <code>master</code> history
+clean.</p>
+
+<div class="highlight"><pre><code class="language-console"><span class="go">[branch-name]$ git fetch</span>
+<span class="go">[branch-name]$ git rebase -i origin/master</span></code></pre></div>
+
+<p>Open a pull request. I suggest using hub<sup id="fnref:4"><a href="#fn:4" class="footnote">4</a></sup> so you do not
+break your workflow leaving the terminal to use the web interface.</p>
+
+<div class="highlight"><pre><code class="language-console"><span class="go">[branch-name]$ hub pull-request</span></code></pre></div>
+
+<p>Add to the pull request smart commit messages<sup id="fnref:5"><a href="#fn:5" class="footnote">5</a></sup> and links to your
+story in the management tool. For example:</p>
+
+<blockquote>
+  <p>Add field telephone to user profile fixes #1337</p>
+
+  <p>Telephone is a required field. Validation is done in the model,
+form text field masked via javascript as (00) 0000-0000.</p>
+
+  <p>ref.: https://www.pivotaltracker.com/story/show/1337</p>
+</blockquote>
+
+<p>Ask your team to review your code and share their
+impressions commenting right on it<sup id="fnref:6"><a href="#fn:6" class="footnote">6</a></sup>. After refactorings and
+corrections you can merge the pull request.</p>
+
+<h4 id="cleaning-up">7. Cleaning up</h4>
+<p>With your pull request merged, you can safely delete your feature
+branch. GitHub has made it very straightforward<sup id="fnref:7"><a href="#fn:7" class="footnote">7</a></sup>. Although, it is
+important to know how to do it on your own:</p>
+
+<div class="highlight"><pre><code class="language-console"><span class="go">[master]$ git push origin :branch-name</span></code></pre></div>
+
+<p>Delete it locally as well.</p>
+
+<div class="highlight"><pre><code class="language-console"><span class="go">[master]$ git branch -d branch-name</span></code></pre></div>
+
+<p>Clear stale remote-tracking branches removed by someone else (or via GitHub):</p>
+
+<div class="highlight"><pre><code class="language-console"><span class="go">[master]$ git remote prune origin</span></code></pre></div>
+
+<p>That’s it! The post ended bigger than expected, and I apologize for
+that. I hope you enjoy and I am looking forward to your opinions in
+the comments below.</p>
+
+<div class="footnotes">
+  <ol>
+    <li id="fn:1">
+
+      <ul>
+        <li><a href="http://robots.thoughtbot.com/post/29355216290/git-landscaping">Git Landscaping</a></li>
+        <li><a href="http://robots.thoughtbot.com/post/21306813001/remote-branch">Remote Branch</a></li>
+        <li><a href="http://robots.thoughtbot.com/post/2831837714/feature-branch-code-reviews">Feature branch code reviews</a></li>
+        <li><a href="http://nvie.com/posts/a-successful-git-branching-model">A successful Git branching model</a></li>
+        <li><a href="http://reinh.com/blog/2009/03/02/a-git-workflow-for-agile-teams.html">A Git Workflow for Agile Teams</a></li>
+        <li><a href="http://git-scm.com/book/ch3-4.html">Git Branching - Branching Workflows</a></li>
+        <li><a href="http://blog.hasmanythrough.com/2008/12/18/agile-git-and-the-story-branch-pattern">Agile git and the story branch pattern</a></li>
+      </ul>
+      <p><a href="#fnref:1" class="reversefootnote">&#8617;</a></p>
+    </li>
+    <li id="fn:2">
+      <p><a href="http://tbaggery.com/2008/04/19/a-note-about-git-commit-messages.html">A Note About Git Commit Messages</a> <a href="#fnref:2" class="reversefootnote">&#8617;</a></p>
+    </li>
+    <li id="fn:3">
+      <p><a href="http://mislav.uniqpath.com/2013/02/merge-vs-rebase">Git merge vs. rebase</a> <a href="#fnref:3" class="reversefootnote">&#8617;</a></p>
+    </li>
+    <li id="fn:4">
+      <p><a href="http://defunkt.io/hub/">hub: the command-line wrapper for git</a> <a href="#fnref:4" class="reversefootnote">&#8617;</a></p>
+    </li>
+    <li id="fn:5">
+
+      <ul>
+        <li><a href="https://github.com/blog/831-issues-2-0-the-next-generation">Issues 2.0: The Next Generation</a></li>
+        <li><a href="https://github.com/blog/1386-closing-issues-via-commit-messages">Closing Issues via Commit
+Messages</a></li>
+      </ul>
+      <p><a href="#fnref:5" class="reversefootnote">&#8617;</a></p>
+    </li>
+    <li id="fn:6">
+      <p><a href="https://github.com/blog/622-inline-commit-notes">Inline commit notes</a> <a href="#fnref:6" class="reversefootnote">&#8617;</a></p>
+    </li>
+    <li id="fn:7">
+      <p><a href="https://github.com/blog/1335-tidying-up-after-pull-requests">Tidying up after Pull Requests</a> <a href="#fnref:7" class="reversefootnote">&#8617;</a></p>
+    </li>
+  </ol>
+</div>
+
+  </article>
+</section>
+
+<!-- Enable Disqus comments -->
+<div id="disqus_thread"></div>
+<script type="text/javascript">
+  var disqus_shortname = 'horewicz';
+  var disqus_identifier = '/my-github-workflow';
+  var disqus_url = 'http://horewi.cz/my-github-workflow.html';
+  (function() {
+    var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+    dsq.src = 'http://' + disqus_shortname + '.disqus.com/embed.js';
+    (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+  })();
+</script>
+
+
+
+  <footer>
+    <a href="about.html">
+  <i class="fa fa-info-circle fa-fw fa-lg"></i>
+</a>
+<a href="https://www.linkedin.com/in/viniciushorewicz">
+  <i class="fa fa-l1nkedin fa-fw fa-lg"></i>
+</a>
+<a href="https://github.com/wicz">
+  <i class="fa fa-github fa-fw fa-lg"></i>
+</a>
+<a href="https://twitter.com/wicz">
+  <i class="fa fa-tw1tter fa-fw fa-lg"></i>
+</a>
+<a href="https://stackoverflow.com/users/3243455/wicz">
+  <i class="fa fa-stack-overflow fa-fw fa-lg"></i>
+</a>
+<a href="/assets/wicz.pub.asc">
+  <i class="fa fa-lock fa-fw fa-lg"></i>
+</a>
+<a href="/atom.xml">
+  <i class="fa fa-rss fa-fw fa-lg"></i>
+</a>
+
+
+  </footer>
+</div>
+
+<script type="text/javascript">
+  var _gaq=[['_setAccount','UA-8480243-3'],['_trackPageview']];
+  (function(d,t){var g=d.createElement(t),s=d.getElementsByTagName(t)[0];
+   g.src=('https:'==location.protocol?'//ssl':'//www')+'.google-analytics.com/ga.js';
+   s.parentNode.insertBefore(g,s)}(document,'script'));
+</script>
+</body>
+</html>
+
