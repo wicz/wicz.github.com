@@ -108,4 +108,8 @@ blockquote {
 .highlight pre {
   margin: 10px;
 }
+img.center {
+  display: block;
+  margin: 0 auto;
+}
 
