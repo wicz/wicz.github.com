@@ -1,6 +1,6 @@
 permalink: /:title.html
 future:    false
-exclude:   [vendor]
+exclude:   [Gemfile, Gemfile.lock, Rakefile, bin, vendor]
 markdown: KramdownPygments
 kramdown:
   input: GFM
